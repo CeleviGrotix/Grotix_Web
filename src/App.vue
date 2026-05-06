@@ -1,11 +1,21 @@
-<script setup></script>
+<script setup>
+import StaffLayout from './layouts/StaffLayout.vue'
+</script>
 
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+
+  <StaffLayout />
 </template>
 
-<style scoped></style>
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background-color: #0a0b0b;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+</style>
