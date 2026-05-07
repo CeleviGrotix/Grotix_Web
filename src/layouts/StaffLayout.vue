@@ -46,21 +46,31 @@
   display: flex;
   height: 100vh;
   width: 100vw;
-  background-color: #0a0b0b; 
-  color: #ffffff;
+  background-color: var(--bg-dark);
+  color: var(--white);
   font-family: sans-serif;
   overflow: hidden;
 }
 
 .sidebar {
   width: 80px;
-  background-color: #0c201a;
+      background: radial-gradient(
+             circle at 30% 20%,
+             rgba(1, 160, 112, 0.35), /* emerald green */
+             transparent 40%
+     ),
+     radial-gradient(
+             circle at 70% 80%,
+             rgba(87, 219, 255, 0.35),  /* bright cyan */
+             transparent 40%
+     );
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
   padding: 2.5rem 0 1.5rem 0;
-  border-right: 1px solid #13332a;
+  border-right: none;
+  height: 100vh;
 }
 
 .nav-menu {
@@ -75,7 +85,7 @@
 
 .nav-icon {
   text-decoration: none;
-  opacity: 0.4;
+  opacity: 0.6;
   transition: all 0.3s ease;
   display: flex;
   justify-content: center;
