@@ -7,7 +7,7 @@ import StaffLayout from '@/shared/layouts/StaffLayout.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import AgriculturistsListView from '@/views/profiles/AgriculturistsListView.vue.vue'
 import CropsListView from '@/views/catalog/CropsListView.vue'
-import CropDetailView from '@/views/catalog/cropDetailView.vue'
+import CropDetailView from '@/views/catalog/CropDetailView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
