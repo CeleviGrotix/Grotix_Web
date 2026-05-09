@@ -3,31 +3,37 @@
     <aside class="sidebar">
       <nav class="nav-menu">
         <router-link to="/dashboard" class="nav-icon" title="Home">
-          <img src="@/assets/icons/home.svg" alt="Home" />
+          <img src="@/shared/assets/icons/home.svg" alt="Home" />
         </router-link>
+        
         <router-link to="/search" class="nav-icon" title="Search">
-          <img src="@/assets/icons/search.svg" alt="Search" />
+          <img src="@/shared/assets/icons/search.svg" alt="Search" />
         </router-link>
-        <router-link to="/clients" class="nav-icon" title="Clients">
-          <img src="@/assets/icons/user.svg" alt="Clients" />
+        
+        <router-link to="/profiles" class="nav-icon" title="Clients">
+          <img src="@/shared/assets/icons/user.svg" alt="Clients" />
         </router-link>
+        
         <router-link to="/contracts" class="nav-icon" title="Contracts">
-          <img src="@/assets/icons/log.svg" alt="Contracts" />
+          <img src="@/shared/assets/icons/log.svg" alt="Contracts" />
         </router-link>
+        
         <router-link to="/devices" class="nav-icon" title="Devices">
-          <img src="@/assets/icons/chip.svg" alt="Devices" />
+          <img src="@/shared/assets/icons/chip.svg" alt="Devices" />
         </router-link>
+        
         <router-link to="/crops" class="nav-icon" title="Crops">
-          <img src="@/assets/icons/plant.svg" alt="Crops" />
+          <img src="@/shared/assets/icons/plant.svg" alt="Crops" />
         </router-link>
+        
         <router-link to="/settings" class="nav-icon" title="Settings">
-          <img src="@/assets/icons/gear.svg" alt="Settings" />
+          <img src="@/shared/assets/icons/gear.svg" alt="Settings" />
         </router-link>
       </nav>
-      
+
       <div class="logo-bottom">
         <span class="logo-icon">
-          <img src="@/assets/icons/bar-icon.svg" alt="Grotix Logo" />
+          <img src="@/shared/assets/icons/bar-icon.svg" alt="Grotix Logo" />
         </span>
       </div>
     </aside>
@@ -39,6 +45,7 @@
 </template>
 
 <script setup>
+// Aquí no necesitamos lógica por ahora, el router hace todo el trabajo.
 </script>
 
 <style scoped>
@@ -54,16 +61,16 @@
 
 .sidebar {
   width: 80px;
-      background: radial-gradient(
-             circle at 30% 20%,
-             rgba(1, 160, 112, 0.35), /* emerald green */
-             transparent 40%
-     ),
-     radial-gradient(
-             circle at 70% 80%,
-             rgba(87, 219, 255, 0.35),  /* bright cyan */
-             transparent 40%
-     );
+  background: radial-gradient(
+          circle at 30% 20%,
+          rgba(1, 160, 112, 0.35), /* emerald green */
+          transparent 40%
+  ),
+  radial-gradient(
+          circle at 70% 80%,
+          rgba(87, 219, 255, 0.35),  /* bright cyan */
+          transparent 40%
+  );
   display: flex;
   flex-direction: column;
   justify-content: space-between;
