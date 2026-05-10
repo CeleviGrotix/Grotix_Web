@@ -1,37 +1,57 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { axiosClient } from '@/shared/http/axiosClient';
 
 export const useAuthStore = defineStore('auth', () => {
-  const token = ref(localStorage.getItem('token') || null);
+  // Usamos 'grotix_token' para que coincida con tu axiosClient.js
+  const token = ref(localStorage.getItem('grotix_token') || null);
+  const user = ref(JSON.parse(localStorage.getItem('grotix_user')) || null);
   const isLoading = ref(false);
+
+  // Getter para saber si está autenticado
+  const isAuthenticated = computed(() => !!token.value);
 
   async function login(email, password) {
     isLoading.value = true;
     try {
-      // Apuntamos al endpoint de tu Swagger
+      // Llamada al Gateway (puerto 5100)
       const response = await axiosClient.post('/api/v1/auth/sign-in', { email, password });
       
-      // OJO: Ajusta "response.data.token" si tu backend lo llama distinto (ej: accessToken)
-      const newToken = response.data.token || response.data; 
-      
-      // Guardamos en la memoria del navegador y en la variable reactiva
-      localStorage.setItem('token', newToken);
+      // Extraemos la info según el LoginResponse que vimos antes
+      const { token: newToken, identityId, email: userEmail } = response.data;
+
+      // Guardamos Token
+      localStorage.setItem('grotix_token', newToken);
       token.value = newToken;
-      
+
+      // Guardamos info básica del usuario (útil para el Dashboard)
+      const userData = { identityId, email: userEmail };
+      localStorage.setItem('grotix_user', JSON.stringify(userData));
+      user.value = userData;
+
     } catch (error) {
       console.error("Error en login:", error);
-      throw new Error("Credenciales inválidas");
+      // Solución al error de ESLint: adjuntamos el 'cause'
+      throw new Error("Credenciales inválidas", { cause: error });
     } finally {
       isLoading.value = false;
     }
   }
 
   function logout() {
-    localStorage.removeItem('token');
+    localStorage.removeItem('grotix_token');
+    localStorage.removeItem('grotix_user');
     token.value = null;
-    // Aquí normalmente haríamos un router.push('/login')
+    user.value = null;
+    // Aquí puedes redirigir al login: router.push('/login')
   }
 
-  return { token, isLoading, login, logout };
+  return { 
+    token, 
+    user, 
+    isLoading, 
+    isAuthenticated, 
+    login, 
+    logout 
+  };
 });
