@@ -15,6 +15,7 @@ import AssociationCreateView from '@/views/contracts/AssociationCreateView.vue'
 import ContractDetailView from '@/views/contracts/ContractDetailView.vue'
 import RegisterInviteView from '@/views/auth/RegisterInviteView.vue'
 import LoginView from '@/views/auth/LoginView.vue'
+import SearchView from '@/views/SearchView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,6 +27,12 @@ const router = createRouter({
         {
           path: '',
           redirect: '/dashboard'
+        },
+        {
+          path: 'profile',
+          name: 'my-profile',
+          component: () => import('@/views/auth/MyProfileView.vue'),
+          meta: { title: 'My Profile | Grotix' }
         },
         {
           path: 'dashboard',
@@ -45,6 +52,12 @@ const router = createRouter({
           name: 'profiles',
           component: AgriculturistsListView,
           meta: { title: 'Agriculturists | Grotix' }
+        },
+        {
+          path: 'search', // <-- 2. Agregar la ruta
+          name: 'search',
+          component: SearchView,
+          meta: { title: 'Global Search | Grotix' }
         },
         {
           path: 'crops',
@@ -104,8 +117,19 @@ const router = createRouter({
 
 // Actualizar el título de la pestaña del navegador dinámicamente
 router.beforeEach((to, from, next) => {
-  document.title = to.meta.title || 'Grotix Web'
-  next()
-})
+  document.title = to.meta.title || 'Grotix Web';
+
+  const publicRoutes = ['login', 'register'];
+  const isPublic = publicRoutes.includes(to.name);
+  const token = localStorage.getItem('grotix_token');
+
+  if (!isPublic && !token) {
+    next({ name: 'login' });
+  } else if (isPublic && token) {
+    next({ name: 'dashboard' });
+  } else {
+    next();
+  }
+});
 
 export default router

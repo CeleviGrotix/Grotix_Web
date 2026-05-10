@@ -26,8 +26,8 @@
           <img src="@/shared/assets/icons/plant.svg" alt="Crops" />
         </router-link>
         
-        <router-link to="/settings" class="nav-icon" title="Settings">
-          <img src="@/shared/assets/icons/gear.svg" alt="Settings" />
+        <router-link to="/profile" class="nav-icon" title="My Profile">
+          <img src="@/shared/assets/icons/gear.svg" alt="My Profile" />
         </router-link>
       </nav>
 
@@ -45,7 +45,6 @@
 </template>
 
 <script setup>
-// Aquí no necesitamos lógica por ahora, el router hace todo el trabajo.
 </script>
 
 <style scoped>
@@ -63,12 +62,12 @@
   width: 80px;
   background: radial-gradient(
           circle at 30% 20%,
-          rgba(1, 160, 112, 0.35), /* emerald green */
+          rgba(1, 160, 112, 0.35),
           transparent 40%
   ),
   radial-gradient(
           circle at 70% 80%,
-          rgba(87, 219, 255, 0.35),  /* bright cyan */
+          rgba(87, 219, 255, 0.35),
           transparent 40%
   );
   display: flex;
@@ -83,11 +82,11 @@
 .nav-menu {
   display: flex;
   flex-direction: column;
-  justify-content: space-evenly; 
+  justify-content: space-evenly;
   align-items: center;
   width: 100%;
   flex-grow: 1;
-  padding-bottom: 2rem; 
+  padding-bottom: 2rem;
 }
 
 .nav-icon {
@@ -101,26 +100,26 @@
 }
 
 .nav-icon img {
-  width: 24px; 
+  width: 24px;
   height: 24px;
-  filter: invert(1) brightness(2); 
+  filter: invert(1) brightness(2);
 }
 
 .nav-icon:hover,
 .router-link-active {
-  opacity: 1; 
+  opacity: 1;
   transform: scale(1.1);
 }
 
 .logo-bottom {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  width: 100%;
+  gap: 1rem;
 }
 
 .logo-icon img {
-  max-width: 50px; 
+  max-width: 50px;
   height: auto;
   object-fit: contain;
 }

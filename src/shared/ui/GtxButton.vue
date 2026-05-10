@@ -48,4 +48,9 @@ defineProps({
   color: var(--red-coral);
   border: 1px solid var(--red-coral);
 }
+
+.gtx-btn.danger:hover {
+  background-color: var(--red-coral);
+  color: var(--bg-dark);
+}
 </style>

@@ -7,28 +7,19 @@
     <div class="detail-layout">
       <div class="profile-header-card">
         <div class="left-info">
-          <img :src="profile.profilePicture" :alt="profile.name" class="big-avatar" />
+          <img :src="profile.profilePicture || 'https://via.placeholder.com/100'" :alt="profile.name" class="big-avatar" />
           <div class="names">
             <h2>{{ profile.name }}</h2>
             <p>{{ profile.roleName }}</p>
           </div>
         </div>
         
-        <div class="right-status">
-          <span class="status-text" :class="{ active: profile.isActive }">
-            {{ profile.isActive ? 'Active' : 'Inactive' }}
-          </span>
-          <label class="switch">
-            <input type="checkbox" v-model="profile.isActive">
-            <span class="slider round"></span>
-          </label>
         </div>
-      </div>
 
       <div class="info-fields">
         <div class="field-group">
           <label class="blue-label">Association</label>
-          <div class="dark-box">{{ profile.association }}</div>
+          <div class="dark-box">{{ associationName }}</div>
         </div>
 
         <div class="field-group">
@@ -54,14 +45,32 @@
 import { onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useProfileStore } from '@/modules/profiles/application/useProfileStore';
+import { useContractsStore } from '@/modules/contracts/application/useContractsStore'; // Importamos el de contratos
 
 const route = useRoute();
 const profileStore = useProfileStore();
+const contractsStore = useContractsStore();
 
 const profile = computed(() => profileStore.currentProfile);
 
-onMounted(() => {
-  profileStore.fetchProfileById(route.params.id);
+// Buscamos el nombre de la asociación usando el ID
+const associationName = computed(() => {
+  if (!profile.value) return 'Loading...';
+  
+  // Extraemos el ID (manejando posibles variaciones de mayúsculas/minúsculas)
+  const assocId = profile.value.associationId || profile.value.AssociationId;
+  
+  // Buscamos en la lista de asociaciones del store de contratos
+  const assoc = contractsStore.associations.find(a => String(a.id) === String(assocId));
+  
+  return assoc ? assoc.name : `Asociación ID: ${assocId}`;
+});
+
+onMounted(async () => {
+  await profileStore.fetchProfileById(route.params.id);
+  if (contractsStore.associations.length === 0) {
+    await contractsStore.fetchAssociations(); // ← mismo nombre que en el dashboard
+  }
 });
 </script>
 
@@ -79,8 +88,7 @@ onMounted(() => {
   padding: 2rem;
   border-radius: 16px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  align-items: center; /* Simplificado ya que no hay toggle a la derecha */
 }
 
 .left-info { display: flex; gap: 1.5rem; align-items: center; }
@@ -107,13 +115,5 @@ onMounted(() => {
   font-family: var(--font-main);
 }
 
-/* TOGGLE SWITCH (Reutilizado) */
-.switch { position: relative; display: inline-block; width: 50px; height: 26px; }
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--red-coral); transition: .4s; }
-.slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; }
-input:checked + .slider { background-color: var(--emerald-green); }
-input:checked + .slider:before { transform: translateX(24px); }
-.slider.round { border-radius: 24px; }
-.slider.round:before { border-radius: 50%; }
+
 </style>

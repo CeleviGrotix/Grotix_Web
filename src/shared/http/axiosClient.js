@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Usamos el puerto 5100 que vi en tu captura de Swagger
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5100';
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5101';
 
 export const axiosClient = axios.create({
   baseURL,

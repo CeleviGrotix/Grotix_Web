@@ -76,7 +76,9 @@ const orderedContracts = computed(() => {
 
 const mockDevices = [
   { id: 1, code: '#HF32A1', status: 'ONLINE' },
-  { id: 2, code: '#S23W1D', status: 'OFFLINE' }
+  { id: 2, code: '#S23W1D', status: 'OFFLINE' },
+  { id: 3, code: '#KP91B7', status: 'ONLINE' },
+  { id: 4, code: '#TM44X2', status: 'OFFLINE' }
 ];
 
 onMounted(async () => {

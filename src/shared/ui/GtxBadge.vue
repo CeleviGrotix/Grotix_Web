@@ -19,7 +19,7 @@ const props = defineProps({
 });
 
 const statusClass = computed(() => {
-  const t = props.text.toUpperCase();
+  const t = props.text?.toUpperCase() ?? '';
   if (t === 'ONLINE' || t === 'ACTIVE' || t === 'RENEWED') return 'badge-success';
   if (t === 'OFFLINE' || t === 'INACTIVE' || t === 'TERMINATED' || t === 'EXPIRED') return 'badge-error';
   if (t === 'DRAFT' || t === 'PENDING') return 'badge-warning';
