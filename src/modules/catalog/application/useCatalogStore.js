@@ -1,4 +1,3 @@
-// src/modules/catalog/application/useCatalogStore.js
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { CatalogApi } from '../infrastructure/CatalogApi';
@@ -34,5 +33,35 @@ export const useCatalogStore = defineStore('catalog', () => {
     }
   }
 
-  return { crops, currentCrop, isLoading, error, fetchCrops, fetchCropById };
+  // NUEVO: Crear un cultivo
+  async function addCrop(data) {
+    try {
+      await CatalogApi.createCrop(data);
+    } catch (err) {
+      console.error(err);
+      throw new Error("No se pudo crear el cultivo");
+    }
+  }
+
+  async function updateCrop(id, data) {
+    try {
+      await CatalogApi.updateCrop(id, data);
+    } catch (err) {
+      console.error(err);
+      throw new Error("No se pudo guardar el cultivo");
+    }
+  }
+
+  async function deleteCrop(id) {
+    try {
+      await CatalogApi.deleteCrop(id);
+      crops.value = crops.value.filter(c => c.id !== id);
+    } catch (err) {
+      console.error(err);
+      throw new Error("No se pudo eliminar el cultivo");
+    }
+  }
+
+  // No olvides exportar la nueva función "addCrop"
+  return { crops, currentCrop, isLoading, error, fetchCrops, fetchCropById, addCrop, updateCrop, deleteCrop };
 });

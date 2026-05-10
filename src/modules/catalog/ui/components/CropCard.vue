@@ -1,6 +1,6 @@
 <template>
   <div class="crop-card" @click="$emit('select', crop)">
-    <img :src="crop.photoUrl" :alt="crop.commonName" class="crop-image" />
+    <img :src="crop.imageUrl" :alt="crop.commonName" class="crop-image" />
     <span class="crop-name">{{ crop.commonName }}</span>
   </div>
 </template>

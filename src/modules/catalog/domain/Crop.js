@@ -1,23 +1,21 @@
-// src/modules/catalog/domain/Crop.js
 export class Crop {
   constructor({ 
-    id, 
+    id, cropId, // Por si el backend manda id o cropId
     commonName, 
     scientificName, 
-    photoUrl, 
+    imageUrl, 
     maxStressTime, 
     optimalTemperature, 
     optimalHumidity, 
     optimalLight 
   }) {
-    this.id = id;
+    this.id = id || cropId;
     this.commonName = commonName;
-    this.scientificName = scientificName;
+    this.scientificName = scientificName || '';
     
-    // Mantenemos la foto para el UI, aunque el backend no la mande aún
-    this.photoUrl = photoUrl; 
+    // Coincide con tu nuevo JSON
+    this.imageUrl = imageUrl; 
     
-    // Todos estos ahora son números limpios, tal como dicta tu JSON
     this.maxStressTime = maxStressTime || 0; 
     this.optimalTemperature = optimalTemperature || 0;
     this.optimalHumidity = optimalHumidity || 0;

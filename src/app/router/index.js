@@ -8,7 +8,7 @@ import DashboardView from '@/views/DashboardView.vue'
 import AgriculturistsListView from '@/views/profiles/AgriculturistsListView.vue.vue'
 import CropsListView from '@/views/catalog/CropsListView.vue'
 import CropDetailView from '@/views/catalog/CropDetailView.vue'
-
+import CropCreateView from '@/views/catalog/CropCreateView.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -38,6 +38,12 @@ const router = createRouter({
           name: 'crops',
           component: CropsListView,
           meta: { title: 'Crops Catalog | Grotix' }
+        },
+        {
+          path: 'crops/new',
+          name: 'crop-create',
+          component: CropCreateView,
+          meta: { title: 'Add Crop | Grotix' }
         },
         {
           path: 'crops/:id',

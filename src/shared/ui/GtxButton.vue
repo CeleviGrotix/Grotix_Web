@@ -1,5 +1,5 @@
 <template>
-  <button :class="['gtx-btn', variant]" @click="$emit('click')">
+  <button type="button" :class="['gtx-btn', variant]">
     <slot></slot>
   </button>
 </template>
@@ -8,12 +8,13 @@
 defineProps({
   variant: {
     type: String,
-    default: 'primary' // primary, secondary, danger, outline
+    default: 'primary'
   }
 });
 </script>
 
 <style scoped>
+/* Tus estilos se mantienen exactamente iguales */
 .gtx-btn {
   padding: 8px 24px;
   border-radius: 8px;
@@ -26,7 +27,7 @@ defineProps({
 }
 
 .gtx-btn.primary {
-  background-color: #1e3a45; /* Fondo azul oscuro que usaste en tus botones ADD/LIST */
+  background-color: #1e3a45;
   color: var(--bright-cyan);
   border: 1px solid var(--blue-cerulean);
 }
