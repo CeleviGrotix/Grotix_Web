@@ -10,6 +10,7 @@ export class Association {
       this.contractStart = contract.startDate;
       this.contractEnd = contract.endDate;
       this.status = contract.status;
+      this.isSuspended = contract.isSuspended;
       this.maxZones = contract.maxZones;
       this.maxMicrocontrollers = contract.maxMicrocontrollers;
       this.totalAmount = contract.totalAmount;

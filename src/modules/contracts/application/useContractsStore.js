@@ -79,13 +79,17 @@ async function fetchAssociations() {
     try {
       await axiosClient.delete(`/api/v1/contracts/${contractId}`);
       
-      // Limpiamos el contrato de la memoria local
       if (currentAssociation.value) {
-        currentAssociation.value.hasActiveContract = false;
-        currentAssociation.value.contractStart = null;
-        currentAssociation.value.contractEnd = null;
+        // ❌ BORRA ESTAS LÍNEAS ❌
+        // currentAssociation.value.hasActiveContract = false; 
+        // currentAssociation.value.contractStart = null;
+        // currentAssociation.value.contractEnd = null;
+
+        // ✅ AGREGA ESTAS ✅
+        currentAssociation.value.status = 'Canceled';
+        currentAssociation.value.isSuspended = true;
       }
-      await fetchAssociations(); // Refrescamos la lista principal
+      await fetchAssociations(); 
     } catch (err) {
       console.error("Error al eliminar el contrato:", err);
       throw err;

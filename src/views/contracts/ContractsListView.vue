@@ -10,8 +10,14 @@
       <div class="header-actions">
         <div class="search-wrapper">
           <img src="@/shared/assets/icons/search.svg" class="search-icon" />
-          <input type="text" placeholder="Search associations..." class="search-input"/>
+          <input 
+            v-model="searchQuery" 
+            type="text" 
+            placeholder="Search associations by name or email..." 
+            class="search-input"
+          />
         </div>
+        
         
         <GtxButton variant="primary" @click="$router.push('/contracts/new-association')">
           ADD ASSOCIATION
@@ -24,7 +30,7 @@
     
     <div v-else class="cards-grid">
       <div 
-        v-for="assoc in contractsStore.associations" 
+        v-for="assoc in filteredAssociations" 
         :key="assoc.id" 
         class="assoc-card"
         @click="$router.push(`/contracts/${assoc.id}`)"
@@ -36,15 +42,30 @@
         </div>
       </div>
     </div>
-  </div>
+    </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, ref, computed } from 'vue'; // Importamos ref y computed
 import { useContractsStore } from '@/modules/contracts/application/useContractsStore';
 import GtxButton from '@/shared/ui/GtxButton.vue';
 
 const contractsStore = useContractsStore();
+
+// 1. Variable para guardar el texto de búsqueda
+const searchQuery = ref('');
+
+// 2. Propiedad computada que filtra automáticamente
+const filteredAssociations = computed(() => {
+  const associations = contractsStore.associations;
+  if (!searchQuery.value) return associations;
+
+  const query = searchQuery.value.toLowerCase();
+  return associations.filter(assoc => 
+    assoc.name.toLowerCase().includes(query) || 
+    assoc.email.toLowerCase().includes(query)
+  );
+});
 
 onMounted(() => {
   contractsStore.fetchAssociations();
