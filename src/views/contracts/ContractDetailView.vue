@@ -15,13 +15,17 @@
     <div class="dashboard-grid">
       
       <div class="form-card">
-        <h3 class="section-title">1. Generate Contract</h3>
-        <p class="subtitle">Assign a contract to this association (1-to-1)</p>
+        <h3 class="section-title">
+          {{ association.hasActiveContract ? '1. Edit Contract' : '1. Generate Contract' }}
+        </h3>
+        <p class="subtitle">
+          {{ association.hasActiveContract ? 'Update current terms or terminate the service.' : 'Assign a contract to this association (1-to-1)' }}
+        </p>
         
         <div class="form-grid">
           <div class="form-group">
             <label>Start Date</label>
-            <input type="datetime-local" class="dark-input" v-model="contractForm.startDate" />
+            <input type="datetime-local" class="dark-input" v-model="contractForm.startDate" :disabled="association.hasActiveContract" />
           </div>
           <div class="form-group">
             <label>End Date</label>
@@ -35,7 +39,10 @@
             <label>Payment Freq.</label>
             <select class="dark-input" v-model="contractForm.paymentFrequency">
               <option value="Monthly">Monthly</option>
-              <option value="Yearly">Yearly</option>
+              <option value="Quarterly">Quarterly</option>
+              <option value="SemiAnnual">SemiAnnual</option>
+              <option value="Annual">Annual</option>
+              <option value="OneTime">OneTime</option>
             </select>
           </div>
           <div class="form-group">
@@ -48,13 +55,25 @@
           </div>
         </div>
 
-        <h4 style="color:var(--blue-cerulean); margin-top:1.5rem;">Org Admin Account</h4>
-        <p style="color: gray; font-size: 0.85rem; margin-bottom: 1rem;">Se enviará una invitación a este correo para que cree su cuenta.</p>
-        <div class="form-group">
-          <input type="email" class="dark-input" placeholder="admin@organizacion.com" v-model="contractForm.orgAdminEmail" />
+        <div v-if="!association.hasActiveContract">
+          <h4 style="color:var(--blue-cerulean); margin-top:1.5rem;">Org Admin Account</h4>
+          <p style="color: gray; font-size: 0.85rem; margin-bottom: 1rem;">A register invitation will be sent to this email</p>
+          <div class="form-group">
+            <input type="email" class="dark-input" placeholder="admin@organizacion.com" v-model="contractForm.orgAdminEmail" />
+          </div>
         </div>
 
-        <GtxButton variant="primary" style="margin-top: 1rem; width: 100%;" @click="handleCreateContract">SAVE CONTRACT</GtxButton>
+        <div class="actions-stack" style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+          <GtxButton variant="primary" style="width: 100%;" @click="handleContractAction">
+            {{ association.hasActiveContract ? 'UPDATE CONTRACT' : 'SAVE CONTRACT' }}
+          </GtxButton>
+
+          <GtxButton v-if="association.hasActiveContract" 
+                    style="width: 100%; background-color: #FF5757; color: white;" 
+                    @click="handleDelete">
+            TERMINATE CONTRACT
+          </GtxButton>
+        </div>
 
         <div v-if="generatedContractLink" class="magic-link-box">
           <p><strong>Link de Admin Generado:</strong></p>
@@ -63,36 +82,24 @@
       </div>
 
       <div class="form-card">
-        <h3 class="section-title">2. Create / Invite Users</h3>
-        <p class="subtitle">Send an email invite to join this Association</p>
+        <h3 class="section-title">2. Active Members</h3>
+        <p class="subtitle">Users currently registered under this association.</p>
 
-        <div class="form-group" style="margin-top: 1.5rem;">
-          <label>User Email</label>
-          <input type="email" class="dark-input" v-model="inviteForm.email" placeholder="trabajador@correo.com" />
-        </div>
-
-        <div class="form-group">
-          <label>Select Role</label>
-          <select class="dark-input" v-model="inviteForm.roleId">
-            <option :value="3">User Admin (Gestor)</option>
-            <option :value="4">User Basic (Agricultor Básico)</option>
-            <option :value="5">User Advanced (Agricultor Avanzado)</option>
-          </select>
-          <small style="color: gray; display: block; margin-top: 5px;">*Solo puedes asignar roles inferiores al tuyo.</small>
-        </div>
-
-        <div class="form-group">
-          <label>Invitation Expiration Date</label>
-          <input type="datetime-local" class="dark-input" v-model="inviteForm.expiresAt" />
-        </div>
-
-        <GtxButton variant="outline" style="margin-top: 1rem; width: 100%; border-color: var(--emerald-green); color: var(--emerald-green);" @click="handleInvite">
-          SEND INVITATION
-        </GtxButton>
-
-        <div v-if="generatedInviteLink" class="magic-link-box">
-          <p><strong>Link de Usuario Generado:</strong></p>
-          <a :href="generatedInviteLink" target="_blank">{{ generatedInviteLink }}</a>
+        <div class="users-list" style="margin-top: 1rem;">
+          <div v-if="isLoadingUsers" style="color: gray;">Loading members...</div>
+          <div v-else-if="associatedUsers.length === 0" style="color: gray; text-align: center; padding: 2rem;">
+            No users found for this organization.
+          </div>
+          <div v-for="user in associatedUsers" :key="user.id" 
+              style="background: #2a2e30; padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <p style="margin: 0; color: white; font-weight: 600;">{{ user.name }}</p>
+              <p style="margin: 0; color: gray; font-size: 0.8rem;">{{ user.email }}</p>
+            </div>
+            <span style="font-size: 0.7rem; color: var(--blue-cerulean); border: 1px solid; padding: 2px 6px; border-radius: 4px;">
+              {{ user.role || 'MEMBER' }}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -104,38 +111,106 @@
 import { onMounted, computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useContractsStore } from '@/modules/contracts/application/useContractsStore';
+import { useProfileStore } from '@/modules/profiles/application/useProfileStore'; // Necesitaremos esto
 import GtxButton from '@/shared/ui/GtxButton.vue';
 
 const route = useRoute();
 const contractsStore = useContractsStore();
-const association = computed(() => contractsStore.currentAssociation);
+const profileStore = useProfileStore();
 
-// Variables reactivas para almacenar los links
+const association = computed(() => contractsStore.currentAssociation);
+const associatedUsers = ref([]); // Aquí guardaremos los usuarios de la lista
+const isLoadingUsers = ref(false);
 const generatedContractLink = ref(''); 
-const generatedInviteLink = ref('');
 
 const contractForm = ref({
-  startDate: '',
-  endDate: '',
-  status: 'Draft',
-  maxZones: 1,
-  maxMicrocontrollers: 100,
-  totalAmount: 10,
-  currency: 'USD',
-  paymentFrequency: 'Monthly',
-  isSuspended: false,
-  orgAdminEmail: '' 
+  startDate: '', endDate: '', status: 'Active', maxZones: 1,
+  maxMicrocontrollers: 100, totalAmount: 10, currency: 'USD',
+  paymentFrequency: 'Monthly', isSuspended: false, orgAdminEmail: '' 
 });
 
-const inviteForm = ref({
-  email: '', 
-  roleId: 4,
-  expiresAt: ''
-});
+// Función para llenar los campos si ya hay contrato
+const syncFormWithContract = () => {
+  if (association.value?.hasActiveContract) {
+    const a = association.value;
+    contractForm.value = {
+      startDate: a.contractStart ? a.contractStart.slice(0, 16) : '',
+      endDate: a.contractEnd ? a.contractEnd.slice(0, 16) : '',
+      status: a.status || 'Active',
+      maxZones: a.maxZones || 1,
+      maxMicrocontrollers: a.maxMicrocontrollers || 100,
+      totalAmount: a.totalAmount || 10,
+      currency: 'USD',
+      paymentFrequency: a.paymentFrequency || 'Monthly',
+      isSuspended: a.isSuspended || false
+    };
+  }
+};
 
 onMounted(async () => {
-  await contractsStore.loadAssociationById(route.params.id);
+  const id = route.params.id;
+  await contractsStore.loadAssociationById(id);
+  syncFormWithContract();
+  
+  // Cargar usuarios de esta asociación
+  fetchAssociatedUsers(id);
 });
+
+const fetchAssociatedUsers = async (id) => {
+  isLoadingUsers.value = true;
+  try {
+    await profileStore.fetchProfiles(); 
+    
+    associatedUsers.value = profileStore.profiles.filter(p => {
+      // Buscamos la propiedad sin importar si es associationId, associationID o AssociationId
+      const assocId = p.associationId || p.associationID || p.AssociationId;
+      return String(assocId) === String(id);
+    });
+  } finally {
+    isLoadingUsers.value = false;
+  }
+};
+
+const handleContractAction = async () => {
+  if (association.value.hasActiveContract) {
+    // ACCIÓN: UPDATE (PATCH)
+    try {
+      // Solo enviamos los campos que definimos en UpdateContractRequest
+      const payload = {
+        // Formateamos la fecha a ISO si existe, o null si está vacía
+        endDate: contractForm.value.endDate || null, 
+        status: contractForm.value.status,
+        maxZones: contractForm.value.maxZones,
+        maxMicrocontrollers: contractForm.value.maxMicrocontrollers,
+        isSuspended: contractForm.value.isSuspended,
+        totalAmount: contractForm.value.totalAmount,
+        paymentFrequency: contractForm.value.paymentFrequency
+      };
+
+      await contractsStore.updateContract(association.value.contractId, payload);
+      alert("Contract updated successfully!");
+    } catch (err) { 
+      // Mostramos el error real del backend si nos responde
+      const msg = err.response?.data?.message || "Failed to update contract.";
+      alert(msg); 
+    }
+  } else {
+    // ACCIÓN: CREATE
+    handleCreateContract();
+  }
+};
+const handleDelete = async () => {
+  if (confirm("Are you sure you want to DEACTIVATE this contract? It will be suspended but the record will remain.")) {
+    try {
+      await contractsStore.deleteContract(association.value.contractId);
+      alert("Contract has been deactivated and suspended.");
+      
+      // Actualizamos el estado local para que los inputs se marquen como suspendidos
+      contractForm.value.isSuspended = true;
+      contractForm.value.status = 'Canceled';
+    } catch (err) { alert("Error deactivating contract."); }
+  }
+};
 
 const handleCreateContract = async () => {
   if (!contractForm.value.orgAdminEmail) {

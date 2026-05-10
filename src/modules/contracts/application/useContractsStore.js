@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { ContractsApi } from '../infrastructure/ContractsApi';
+import { axiosClient } from '@/shared/http/axiosClient';
+import { Association } from '../domain/Association';
 
 export const useContractsStore = defineStore('contracts', () => {
   const associations = ref([]);
@@ -8,17 +10,34 @@ export const useContractsStore = defineStore('contracts', () => {
   const isLoading = ref(false);
   const error = ref(null);
 
-  async function fetchAssociations() {
-    isLoading.value = true;
-    error.value = null;
-    try {
-      associations.value = await ContractsApi.getAssociations();
-    } catch (err) {
-      error.value = 'Error al cargar las asociaciones.';
-    } finally {
-      isLoading.value = false;
-    }
+async function fetchAssociations() {
+  isLoading.value = true;
+  error.value = null;
+  try {
+    // 1. Traemos asociaciones y contratos al mismo tiempo
+    const [assocData, contractsData] = await Promise.all([
+      ContractsApi.getAssociations(),
+      axiosClient.get('/api/v1/contracts').then(res => res.data) // Traemos la lista de contratos
+    ]);
+
+    const rawContracts = contractsData.items || contractsData || [];
+
+      associations.value = assocData.map(assoc => {
+        // Comparamos IDs convirtiéndolos a String para evitar errores (1 vs "1")
+        const matchingContract = rawContracts.find(c => 
+          String(c.associationId) === String(assoc.id)
+        );
+        
+        return new Association(assoc, matchingContract);
+      });
+
+  } catch (err) {
+    console.error(err);
+    error.value = 'Error al sincronizar contratos.';
+  } finally {
+    isLoading.value = false;
   }
+}
 
   // Busca en la memoria local o hace un fetch si recargan la página
   async function loadAssociationById(id) {
@@ -38,6 +57,41 @@ export const useContractsStore = defineStore('contracts', () => {
     return await ContractsApi.createContract(contractData);
   }
 
+  // Editar un contrato existente
+  async function updateContract(contractId, contractData) {
+    try {
+      const response = await axiosClient.patch(`/api/v1/contracts/${contractId}`, contractData);
+      
+      // Actualizamos el contrato en la memoria local para que la UI reaccione
+      if (currentAssociation.value && currentAssociation.value.contractStart) {
+        currentAssociation.value.contractEnd = response.data.endDate;
+      }
+      await fetchAssociations(); // Refrescamos la lista principal
+      return response.data;
+    } catch (err) {
+      console.error("Error al actualizar el contrato:", err);
+      throw err;
+    }
+  }
+
+  // Eliminar un contrato (Dar de baja)
+  async function deleteContract(contractId) {
+    try {
+      await axiosClient.delete(`/api/v1/contracts/${contractId}`);
+      
+      // Limpiamos el contrato de la memoria local
+      if (currentAssociation.value) {
+        currentAssociation.value.hasActiveContract = false;
+        currentAssociation.value.contractStart = null;
+        currentAssociation.value.contractEnd = null;
+      }
+      await fetchAssociations(); // Refrescamos la lista principal
+    } catch (err) {
+      console.error("Error al eliminar el contrato:", err);
+      throw err;
+    }
+  }
+
   async function inviteUser(associationId, inviteData) {
   try {
     // Retornamos lo que nos da la API (que incluye el token)
@@ -51,6 +105,6 @@ export const useContractsStore = defineStore('contracts', () => {
   return { 
     associations, currentAssociation, isLoading, error, 
     fetchAssociations, loadAssociationById, addAssociation, 
-    addContract, inviteUser 
+    addContract, inviteUser, updateContract, deleteContract
   };
 });

@@ -6,6 +6,7 @@ export class Profile {
     this.phone = data.phone || 'Sin teléfono';
     
     this.roleId = data.roleId;
+    this.associationId = data.associationId;
     
     // Diccionario de roles basado exactamente en tu base de datos MySQL
     const roleMap = {
