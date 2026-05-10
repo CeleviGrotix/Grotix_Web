@@ -9,6 +9,7 @@ import AgriculturistsListView from '@/views/profiles/AgriculturistsListView.vue.
 import CropsListView from '@/views/catalog/CropsListView.vue'
 import CropDetailView from '@/views/catalog/CropDetailView.vue'
 import CropCreateView from '@/views/catalog/CropCreateView.vue'
+import AgriculturistDetailView from '@/views/profiles/AgriculturistDetailView.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -26,6 +27,12 @@ const router = createRouter({
           component: DashboardView,
           meta: { title: 'Main Dashboard | Grotix' }
         },
+        {
+          path: 'profiles/:id', 
+          name: 'profile-detail',
+          component: AgriculturistDetailView,
+          meta: { title: 'Agriculturist Detail | Grotix' }
+        },        
         {
           // Esta ruta coincide con el <router-link to="/profiles"> de tu menú lateral
           path: 'profiles', 

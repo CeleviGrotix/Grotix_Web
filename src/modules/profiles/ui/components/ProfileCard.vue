@@ -1,28 +1,27 @@
 <template>
-  <div class="profile-card">
-    <div class="profile-info">
-      <img :src="profile.avatarUrl" :alt="profile.fullName" class="avatar" />
-      <div class="details">
-        <h3>{{ profile.fullName }}</h3>
-        <p>{{ profile.role }}</p>
+  <div class="profile-card" @click="$emit('select', profile)">
+    <div class="card-left">
+      <img :src="profile.profilePicture" :alt="profile.name" class="avatar" />
+      <div class="info">
+        <h3 class="name">{{ profile.name }}</h3>
+        <p class="role">{{ profile.roleName }}</p>
       </div>
     </div>
     
-    <div class="actions">
-      <GtxBadge :text="profile.status" />
-      </div>
+    <div class="card-right" @click.stop>
+      <label class="switch">
+        <input type="checkbox" v-model="profile.isActive">
+        <span class="slider round"></span>
+      </label>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { Profile } from '../../domain/Profile';
-import GtxBadge from '@/shared/ui/GtxBadge.vue';
 
 defineProps({
-  profile: {
-    type: Profile,
-    required: true
-  }
+  profile: { type: Profile, required: true }
 });
 </script>
 
@@ -31,40 +30,50 @@ defineProps({
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #161819; /* Color de tus cards en Figma */
-  padding: 16px 20px;
+  background-color: #161819;
+  padding: 16px;
   border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s ease;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s;
 }
-
 .profile-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  background-color: #1e2122;
 }
 
-.profile-info {
+.card-left {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
 .avatar {
-  width: 50px;
-  height: 50px;
-  border-radius: 12px;
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
   object-fit: cover;
 }
 
-.details h3 {
+.name {
+  color: var(--white);
   margin: 0 0 4px 0;
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--white);
 }
 
-.details p {
+.role {
+  color: var(--light-grey);
   margin: 0;
   font-size: 0.85rem;
-  color: var(--light-grey);
 }
+
+/* ESTILOS DEL TOGGLE SWITCH */
+.switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--red-coral); transition: .4s; }
+.slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; }
+input:checked + .slider { background-color: var(--emerald-green); }
+input:checked + .slider:before { transform: translateX(20px); }
+.slider.round { border-radius: 24px; }
+.slider.round:before { border-radius: 50%; }
 </style>
