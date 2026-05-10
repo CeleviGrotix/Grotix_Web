@@ -10,6 +10,12 @@ import CropsListView from '@/views/catalog/CropsListView.vue'
 import CropDetailView from '@/views/catalog/CropDetailView.vue'
 import CropCreateView from '@/views/catalog/CropCreateView.vue'
 import AgriculturistDetailView from '@/views/profiles/AgriculturistDetailView.vue'
+import ContractsListView from '@/views/contracts/ContractsListView.vue'
+import AssociationCreateView from '@/views/contracts/AssociationCreateView.vue'
+import ContractDetailView from '@/views/contracts/ContractDetailView.vue'
+import RegisterInviteView from '@/views/auth/RegisterInviteView.vue'
+import LoginView from '@/views/auth/LoginView.vue'
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -57,11 +63,41 @@ const router = createRouter({
           name: 'crop-detail',
           component: CropDetailView,
           meta: { title: 'Crop Details | Grotix' }
+        },
+        {
+          path: 'contracts',
+          name: 'contracts',
+          component: ContractsListView,
+          meta: { title: 'Contracts | Grotix' }
+        },
+        {
+          path: 'contracts/new-association',
+          name: 'association-create',
+          component: AssociationCreateView,
+          meta: { title: 'New Association | Grotix' }
+        },
+        {
+          path: 'contracts/:id',
+          name: 'contract-detail',
+          component: ContractDetailView,
+          meta: { title: 'Association Details | Grotix' }
         }
         // En el futuro agregarás aquí:
         // { path: 'contracts', component: ContractsListView... }
         // { path: 'devices', component: DevicesListView... }
       ]
+    },
+    {
+      path: '/register',
+      name: 'register',
+      component: RegisterInviteView,
+      meta: { title: 'Register | Grotix' }
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: LoginView,
+      meta: { title: 'Login | Grotix' }
     }
   ]
 })
