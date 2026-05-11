@@ -1,13 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Gabarito:wght@400;600;700;800&display=swap');
 
 :root {
-  /* Colores Principales */
+  /* -------- VARIABLES --------- */
+  /* Paleta Principal */
   --green-grass: #4FD16C;
   --blue-cerulean: #40BFE2;
   --red-coral: #FF5757;
   --black: #000000;
 
-  /* Colores Secundarios */
+  /* Paleta Secundaria */
   --emerald-green: #01A070;
   --bright-cyan: #57DBFF;
   --light-grey: #DDDDDD;
@@ -17,7 +18,7 @@
   --bg-dark: #0a0a0a;
   --bg-sidebar: #0c201a;
 
-  /* Tipografía */
+  /* -------- TIPOGRAFÍA --------- */
   --font-main: 'Gabarito', sans-serif;
 }
 
