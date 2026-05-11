@@ -3,15 +3,15 @@
     <header class="dashboard-header">
       <h1>Main Dashboard</h1>
     </header>
-    
+
     <div class="dashboard-grid">
-      
+
       <div class="column">
         <h3 class="col-title">Active Clients</h3>
         <div v-if="profileStore.isLoading" class="loading-text">Cargando...</div>
         <div v-else class="cards-stack">
-          <GtxCard 
-            v-for="client in profileStore.profiles" 
+          <GtxCard
+            v-for="client in profileStore.profiles"
             :key="client.id"
             @click="router.push({ name: 'profile-detail', params: { id: client.id } })"
           >
@@ -23,13 +23,13 @@
           </GtxCard>
         </div>
       </div>
-      
+
       <div class="column">
         <h3 class="col-title">Contracts</h3>
         <div v-if="contractStore.isLoading" class="loading-text">Cargando...</div>
         <div v-else class="cards-stack">
-          <GtxCard 
-            v-for="assoc in orderedContracts" 
+          <GtxCard
+            v-for="assoc in orderedContracts"
             :key="assoc.id"
             @click="router.push({ name: 'contract-detail', params: { id: assoc.id } })"
           >
@@ -67,7 +67,8 @@ const router = useRouter();
 const profileStore = useProfileStore();
 const contractStore = useContractsStore();
 
-// Lógica para filtrar solo los que tienen contrato y ordenar por los más recientes arriba
+// filtrar solo los que tienen contrato
+// ordenar por los más recientes arriba
 const orderedContracts = computed(() => {
   return contractStore.associations
     .filter(a => a.hasActiveContract)
@@ -91,11 +92,10 @@ onMounted(async () => {
 
 <style scoped>
 .dashboard-container {
-  /* Añade padding extra abajo para que no se pegue al fondo al hacer scroll */
-  padding-bottom: 4rem; 
+  padding-bottom: 4rem;
 }
 
-/* --- HEADER Y LÍNEAS CIAN --- */
+/* --- HEADER Y LÍNEAS --- */
 .dashboard-header {
   display: flex;
   align-items: center;
@@ -106,12 +106,11 @@ onMounted(async () => {
 
 .dashboard-header h1 {
   font-size: 2.5rem;
-  font-weight: 800; /* Gabarito Extrabold */
+  font-weight: 800;
   margin: 0;
   white-space: nowrap;
 }
 
-/* El truco para hacer las líneas degradadas a los lados del título */
 .dashboard-header::before,
 .dashboard-header::after {
   content: '';
