@@ -21,6 +21,8 @@
       </div>
     </header>
 
+    //potoooooooooooooooo
+
     <div v-if="searchStore.isLoading" class="feedback-msg">Searching...</div>
 
     <div v-else class="results-grid">
@@ -55,7 +57,6 @@
           </div>
         </div>
 
-        <!-- ✅ Device ahora dentro del v-for y con :text en lugar de slot -->
         <div v-else-if="item.type === 'device'" class="res-card device-card">
           <div class="res-info">
             <h3 class="device-id">{{ item.title }}</h3>
@@ -132,7 +133,10 @@ const getStatusDisplay = (status) => {
   font-size: 1rem;
   outline: none;
 }
-.search-input:focus { border-color: var(--azul-ceruleo, #40BFE2); outline: none; }
+.search-input:focus {
+  border-color: var(--azul-ceruleo);
+  outline: none;
+}
 
 .results-grid {
   display: grid;
@@ -157,7 +161,7 @@ const getStatusDisplay = (status) => {
 .res-info p { margin: 4px 0 0; font-size: 0.85rem; color: #8bb8c7; }
 
 .timestamp { display: block; font-size: 0.7rem; color: #555; margin-top: 8px; }
-.status-val { color: var(--verde-pasto, #4FD16C); font-weight: bold; }
+.status-val { color: var(--verde-pasto); font-weight: bold; }
 
 .clickable-result {
   cursor: pointer;
