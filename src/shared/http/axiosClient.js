@@ -2,6 +2,7 @@ import axios from 'axios';
 
 // ESTE ES AXIOS BTW
 // ESTE ES AXIOS BTW 2
+// ESTE ES AXIOS BTW 3
 // Usamos el puerto 5100 que vi en tu captura de Swagger
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5101';
 
