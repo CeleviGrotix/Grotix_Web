@@ -21,8 +21,7 @@ jobs:
       - name: Install
         run: npm ci
 
+      # La URL de producción viene de .env.production en el repo (Vite la incrusta en el build).
+      # No forzar VITE_API_URL vacío desde un secret ausente, o pisaría ese archivo.
       - name: Build
-        env:
-          # Repository secret: Settings → Secrets and variables → Actions → VITE_API_URL
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
         run: npm run build
