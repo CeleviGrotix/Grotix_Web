@@ -3,13 +3,13 @@ import { Crop } from '../domain/Crop';
 
 export const CatalogApi = {
   async getCrops() {
-    const response = await axiosClient.get('http://localhost:5102/api/v1/catalog/crops');
+    const response = await axiosClient.get('/api/v1/catalog/crops');
     const items = response.data.items || response.data || [];
     return items.map(dto => new Crop(dto));
   },
 
   async getCropById(id) {
-    const response = await axiosClient.get(`http://localhost:5102/api/v1/catalog/crops/${id}`);
+    const response = await axiosClient.get(`/api/v1/catalog/crops/${id}`);
     return new Crop(response.data);
   },
 
@@ -24,7 +24,7 @@ export const CatalogApi = {
       maxStressTime: cropData.maxStressTime || 0,
       imageUrl: cropData.imageUrl || ''
     };
-    const response = await axiosClient.post('http://localhost:5102/api/v1/catalog/crops', payload);
+    const response = await axiosClient.post('/api/v1/catalog/crops', payload);
     return response.data;
   },
 
@@ -38,11 +38,11 @@ export const CatalogApi = {
       maxStressTime: cropData.maxStressTime,
       imageUrl: cropData.imageUrl
     };
-    const response = await axiosClient.put(`http://localhost:5102/api/v1/catalog/crops/${id}`, payload);
+    const response = await axiosClient.put(`/api/v1/catalog/crops/${id}`, payload);
     return response.data;
   },
 
   async deleteCrop(id) {
-    await axiosClient.delete(`http://localhost:5102/api/v1/catalog/crops/${id}`);
+    await axiosClient.delete(`/api/v1/catalog/crops/${id}`);
   }
 };
