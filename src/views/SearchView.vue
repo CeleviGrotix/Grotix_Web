@@ -28,7 +28,7 @@
 
         <div
           v-if="item.type === 'agriculturist'"
-          class="res-card profile-card clickable-result"
+          class="res-card clickable-result"
           @click="router.push(`/profiles/${item.id}`)"
         >
           <img :src="item.imageUrl || 'https://via.placeholder.com/60'" class="res-avatar" />
@@ -40,7 +40,7 @@
 
         <div
           v-else-if="item.type === 'association'"
-          class="res-card assoc-card clickable-result"
+          class="res-card clickable-result"
           @click="router.push(`/contracts/${item.id}`)"
         >
           <div class="res-info">
@@ -55,8 +55,7 @@
           </div>
         </div>
 
-        <!-- ✅ Device ahora dentro del v-for y con :text en lugar de slot -->
-        <div v-else-if="item.type === 'device'" class="res-card device-card">
+        <div v-else-if="item.type === 'device'" class="res-card">
           <div class="res-info">
             <h3 class="device-id">{{ item.title }}</h3>
             <p>{{ item.subtitle }}</p>
@@ -79,20 +78,14 @@ import { useRouter } from 'vue-router';
 const router = useRouter();
 const searchStore = useSearchStore();
 
-onMounted(() => {
-  searchStore.performSearch('');
-});
+onMounted(() => searchStore.performSearch(''));
 
 let timeout = null;
-onUnmounted(() => {
-  clearTimeout(timeout);
-});
+onUnmounted(() => clearTimeout(timeout));
 
 const debouncedSearch = (event) => {
   clearTimeout(timeout);
-  timeout = setTimeout(() => {
-    searchStore.performSearch(event.target.value);
-  }, 400);
+  timeout = setTimeout(() => searchStore.performSearch(event.target.value), 400);
 };
 
 const getStatusDisplay = (status) => {
@@ -104,7 +97,38 @@ const getStatusDisplay = (status) => {
 </script>
 
 <style scoped>
-.search-box-container { margin-bottom: 3rem; }
+.page-container {
+  padding-bottom: 2rem;
+  width: 100%;
+}
+
+/* --- TITLE --- */
+.title-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.title-section h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--white);
+  margin: 0;
+  white-space: nowrap;
+}
+
+.line-decorator {
+  flex-grow: 1;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 87, 87, 0.5), transparent);
+  max-width: 250px;
+}
+
+/* --- SEARCH --- */
+.search-box-container { margin-bottom: 2rem; }
+
 .search-wrapper {
   position: relative;
   display: flex;
@@ -132,8 +156,10 @@ const getStatusDisplay = (status) => {
   font-size: 1rem;
   outline: none;
 }
-.search-input:focus { border-color: var( --blue-cerulean); outline: none; }
 
+.search-input::placeholder { color: #8bb8c7; }
+
+/* --- RESULTS GRID --- */
 .results-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -149,26 +175,87 @@ const getStatusDisplay = (status) => {
   gap: 1rem;
   transition: background 0.2s;
 }
+
 .res-card:hover { background-color: #1e2122; }
 
-.res-avatar { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; }
-.res-info { flex: 1; }
-.res-info h3 { margin: 0; font-size: 1.1rem; color: white; }
-.res-info p { margin: 4px 0 0; font-size: 0.85rem; color: #8bb8c7; }
+.res-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
 
-.timestamp { display: block; font-size: 0.7rem; color: #555; margin-top: 8px; }
-/*.status-val { color: var(--verde-pasto, #4FD16C); font-weight: bold; }*/
+.res-info { flex: 1; min-width: 0; }
+.res-info h3 { margin: 0; font-size: 1.1rem; color: white; }
+.res-info p  { margin: 4px 0 0; font-size: 0.85rem; color: #8bb8c7; }
+
+.device-id { font-family: monospace; }
+.timestamp  { display: block; font-size: 0.7rem; color: #555; margin-top: 8px; }
+
+.status-line { margin-top: 6px !important; }
 
 .clickable-result {
   cursor: pointer;
   transition: transform 0.2s, background-color 0.2s;
 }
+
 .clickable-result:hover {
   background-color: #1e2122;
   transform: translateX(5px);
   border-left: 4px solid #40BFE2;
 }
-.clickable-result:active {
-  transform: scale(0.98);
+
+.clickable-result:active { transform: scale(0.98); }
+
+.feedback-msg {
+  text-align: center;
+  color: var(--blue-cerulean);
+  margin-top: 3rem;
+}
+
+/* ============================================================
+   TABLET (≤ 1024px)
+   ============================================================ */
+@media (max-width: 1024px) {
+  .title-section h1 { font-size: 1.75rem; }
+
+  .results-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  }
+}
+
+/* ============================================================
+   MÓVIL (≤ 768px)
+   ============================================================ */
+@media (max-width: 768px) {
+  .title-section h1 { font-size: 1.5rem; }
+  .line-decorator { max-width: 60px; }
+
+  .search-input {
+    font-size: 0.95rem;
+    padding: 14px 16px 14px 50px;
+  }
+
+  .results-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .res-card { padding: 1.25rem; }
+}
+
+/* ============================================================
+   MÓVIL PEQUEÑO (≤ 480px)
+   ============================================================ */
+@media (max-width: 480px) {
+  .title-section h1 { font-size: 1.25rem; }
+  .line-decorator { display: none; }
+
+  .search-icon { left: 14px; width: 20px; height: 20px; }
+  .search-input { padding: 12px 12px 12px 42px; font-size: 0.9rem; }
+
+  .res-avatar { width: 48px; height: 48px; }
+  .res-info h3 { font-size: 1rem; }
 }
 </style>

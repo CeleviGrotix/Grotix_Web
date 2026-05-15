@@ -67,8 +67,6 @@ const router = useRouter();
 const profileStore = useProfileStore();
 const contractStore = useContractsStore();
 
-// filtrar solo los que tienen contrato
-// ordenar por los más recientes arriba
 const orderedContracts = computed(() => {
   return contractStore.associations
     .filter(a => a.hasActiveContract)
@@ -95,7 +93,7 @@ onMounted(async () => {
   padding-bottom: 4rem;
 }
 
-/* --- HEADER Y LÍNEAS --- */
+/* --- HEADER --- */
 .dashboard-header {
   display: flex;
   align-items: center;
@@ -121,7 +119,7 @@ onMounted(async () => {
   max-width: 350px;
 }
 
-/* --- GRID DE 3 COLUMNAS --- */
+/* --- GRID 3 COLUMNAS --- */
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -142,7 +140,6 @@ onMounted(async () => {
   gap: 1rem;
 }
 
-/* Textos de estado */
 .loading-text, .error-text, .empty-text {
   text-align: center;
   font-size: 0.9rem;
@@ -151,26 +148,69 @@ onMounted(async () => {
   background-color: rgba(255,255,255,0.05);
 }
 
-.error-text {
-  color: var(--red-coral);
-  border: 1px solid rgba(255, 87, 87, 0.3);
-}
+.error-text { color: var(--red-coral); border: 1px solid rgba(255, 87, 87, 0.3); }
+.empty-text { color: var(--light-grey); opacity: 0.7; }
 
-.empty-text {
-  color: var(--light-grey);
-  opacity: 0.7;
-}
-
-/* Responsive básico para pantallas pequeñas */
-@media (max-width: 1200px) {
+/* ============================================================
+   TABLET (≤ 1024px): 2 columnas
+   ============================================================ */
+@media (max-width: 1024px) {
   .dashboard-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .dashboard-header h1 {
+    font-size: 2rem;
+  }
 }
 
+/* ============================================================
+   MÓVIL (≤ 768px): 1 columna, header compacto
+   ============================================================ */
 @media (max-width: 768px) {
+  .dashboard-container {
+    padding-bottom: 2rem;
+  }
+
+  .dashboard-header {
+    margin-bottom: 2rem;
+    gap: 0.75rem;
+  }
+
+  .dashboard-header h1 {
+    font-size: 1.5rem;
+    white-space: normal;
+    text-align: center;
+  }
+
+  /* Las líneas decorativas se acortan en móvil */
+  .dashboard-header::before,
+  .dashboard-header::after {
+    max-width: 60px;
+  }
+
   .dashboard-grid {
     grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .col-title {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+}
+
+/* ============================================================
+   MÓVIL PEQUEÑO (≤ 480px)
+   ============================================================ */
+@media (max-width: 480px) {
+  .dashboard-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .dashboard-header::before,
+  .dashboard-header::after {
+    display: none;
   }
 }
 </style>

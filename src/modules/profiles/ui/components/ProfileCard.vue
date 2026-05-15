@@ -7,10 +7,10 @@
         <p class="role">{{ profile.roleName }}</p>
       </div>
     </div>
-    
+
     <div class="card-right" @click.stop>
       <label class="switch">
-        <input type="checkbox" v-model="profile.isActive">
+        <input type="checkbox" v-model="profile.isActive" />
         <span class="slider round"></span>
       </label>
     </div>
@@ -36,6 +36,7 @@ defineProps({
   cursor: pointer;
   transition: transform 0.2s ease, background-color 0.2s;
 }
+
 .profile-card:hover {
   transform: translateY(-3px);
   background-color: #1e2122;
@@ -45,6 +46,7 @@ defineProps({
   display: flex;
   align-items: center;
   gap: 16px;
+  min-width: 0; /* evita overflow del texto */
 }
 
 .avatar {
@@ -52,13 +54,19 @@ defineProps({
   height: 60px;
   border-radius: 8px;
   object-fit: cover;
+  flex-shrink: 0;
 }
+
+.info { min-width: 0; }
 
 .name {
   color: var(--white);
   margin: 0 0 4px 0;
   font-size: 1.1rem;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .role {
@@ -67,13 +75,51 @@ defineProps({
   font-size: 0.85rem;
 }
 
-/* ESTILOS DEL TOGGLE SWITCH */
-.switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+/* --- TOGGLE --- */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
 .switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--red-coral); transition: .4s; }
-.slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; }
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--red-coral);
+  transition: 0.4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+}
+
 input:checked + .slider { background-color: var(--emerald-green); }
 input:checked + .slider:before { transform: translateX(20px); }
 .slider.round { border-radius: 24px; }
 .slider.round:before { border-radius: 50%; }
+
+/* ============================================================
+   MÓVIL (≤ 480px)
+   ============================================================ */
+@media (max-width: 480px) {
+  .avatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  .name { font-size: 1rem; }
+  .role { font-size: 0.8rem; }
+}
 </style>
