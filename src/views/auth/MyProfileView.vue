@@ -70,9 +70,7 @@ onMounted(async () => {
   }
 });
 
-const goEdit = () => {
-  alert('Edit coming soon');
-};
+const goEdit = () => alert('Edit coming soon');
 
 const handleLogout = () => {
   authStore.logout();
@@ -81,8 +79,13 @@ const handleLogout = () => {
 </script>
 
 <style scoped>
-.page-container { max-width: 700px; width: 100%; padding-bottom: 2rem; }
+.page-container {
+  max-width: 700px;
+  width: 100%;
+  padding-bottom: 2rem;
+}
 
+/* --- HEADER --- */
 .page-header {
   display: flex;
   align-items: center;
@@ -90,7 +93,14 @@ const handleLogout = () => {
   gap: 1.5rem;
   margin-bottom: 2.5rem;
 }
-.page-header h1 { font-size: 2rem; font-weight: 800; margin: 0; white-space: nowrap; }
+
+.page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  white-space: nowrap;
+}
+
 .line-decorator {
   flex: 1;
   height: 2px;
@@ -99,6 +109,7 @@ const handleLogout = () => {
   max-width: 200px;
 }
 
+/* --- CARD --- */
 .profile-card {
   background-color: #161819;
   border-radius: 16px;
@@ -119,15 +130,34 @@ const handleLogout = () => {
   height: 100px;
   border-radius: 12px;
   background-color: #2a2e30;
-  padding: 10px; /* ← era 8px, eso cortaba la imagen */
+  padding: 10px;
+  flex-shrink: 0;
 }
 
-.profile-names h2 { margin: 0 0 0.3rem 0; font-size: 1.6rem; color: var(--white); }
-.profile-names p  { margin: 0 0 0.75rem 0; font-size: 0.85rem; color: var(--light-grey); }
+.profile-names h2 {
+  margin: 0 0 0.3rem 0;
+  font-size: 1.6rem;
+  color: var(--white);
+  word-break: break-word;
+}
 
+.profile-names p {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.85rem;
+  color: var(--light-grey);
+  word-break: break-word;
+}
+
+/* --- FIELDS --- */
 .field-group { margin-bottom: 1.2rem; }
-.green-label { display: block; color: var(--emerald-green); margin-bottom: 0.5rem; font-weight: 600; font-size: 0.85rem; }
-.red-label   { display: block; color: var(--red-coral); margin-bottom: 0.5rem; font-weight: 600; font-size: 0.85rem; }
+
+.green-label {
+  display: block;
+  color: var(--emerald-green);
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
 
 .dark-box {
   width: 100%;
@@ -137,10 +167,67 @@ const handleLogout = () => {
   color: var(--white);
   font-family: var(--font-main);
   box-sizing: border-box;
+  word-break: break-word;
 }
 
+/* --- ACTIONS --- */
 .actions {
   display: flex;
   gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.feedback-msg {
+  text-align: center;
+  color: var(--blue-cerulean);
+  margin-top: 3rem;
+}
+
+/* ============================================================
+   TABLET (≤ 1024px)
+   ============================================================ */
+@media (max-width: 1024px) {
+  .page-container { max-width: 100%; }
+  .page-header h1 { font-size: 1.75rem; }
+}
+
+/* ============================================================
+   MÓVIL (≤ 768px)
+   ============================================================ */
+@media (max-width: 768px) {
+  .page-header h1 { font-size: 1.5rem; }
+  .line-decorator { max-width: 80px; }
+
+  .profile-card { padding: 1.25rem; gap: 1.5rem; }
+
+  .avatar {
+    width: 72px;
+    height: 72px;
+    padding: 8px;
+  }
+
+  .profile-names h2 { font-size: 1.25rem; }
+
+  /* Botones al ancho completo */
+  .actions { flex-direction: column; }
+  .actions :deep(.gtx-btn) { width: 100%; }
+}
+
+/* ============================================================
+   MÓVIL PEQUEÑO (≤ 480px)
+   ============================================================ */
+@media (max-width: 480px) {
+  .page-header h1 { font-size: 1.25rem; }
+  .line-decorator { display: none; }
+
+  .profile-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .avatar {
+    width: 64px;
+    height: 64px;
+  }
 }
 </style>
