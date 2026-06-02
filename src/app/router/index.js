@@ -3,7 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 // 1. Importamos el Layout Principal
 import StaffLayout from '@/shared/layouts/StaffLayout.vue'
 
-// 2. Importamos las Vistas (Views)
+// 2. Importamos las Vistas (Views) sin incluir Devices aquí
 import DashboardView from '@/views/DashboardView.vue'
 import AgriculturistsListView from '@/views/profiles/AgriculturistsListView.vue.vue'
 import CropsListView from '@/views/catalog/CropsListView.vue'
@@ -22,7 +22,7 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      component: StaffLayout, // El layout envuelve a las páginas
+      component: StaffLayout, 
       children: [
         {
           path: '',
@@ -47,14 +47,13 @@ const router = createRouter({
           meta: { title: 'Agriculturist Detail | Grotix' }
         },        
         {
-          // Esta ruta coincide con el <router-link to="/profiles"> de tu menú lateral
           path: 'profiles', 
           name: 'profiles',
           component: AgriculturistsListView,
           meta: { title: 'Agriculturists | Grotix' }
         },
         {
-          path: 'search', // <-- 2. Agregar la ruta
+          path: 'search', 
           name: 'search',
           component: SearchView,
           meta: { title: 'Global Search | Grotix' }
@@ -94,10 +93,32 @@ const router = createRouter({
           name: 'contract-detail',
           component: ContractDetailView,
           meta: { title: 'Association Details | Grotix' }
+        },
+        // --- RUTAS NUEVAS DE DISPOSITIVOS ---
+        {
+          path: 'devices',
+          name: 'devices',
+          component: () => import('@/views/devices/DevicesListView.vue'), // Lista
+          meta: { title: 'Hardware Devices | Grotix' }
+        },
+        {
+          path: 'devices/logbook',
+          name: 'device-logbook',
+          component: () => import('@/views/devices/DeviceLogbookView.vue'), // Logbook
+          meta: { title: 'Logbook | Grotix' }
+        },
+        {
+          path: 'devices/maintenance',
+          name: 'device-maintenance',
+          component: () => import('@/views/devices/DeviceMaintenanceView.vue'), // Maintenance
+          meta: { title: 'Maintenance | Grotix' }
+        },
+        {
+          path: 'devices/:id',
+          name: 'device-detail',
+          component: () => import('@/views/devices/DeviceDetailView.vue'), // Detalle
+          meta: { title: 'Device Detail | Grotix' }
         }
-        // En el futuro agregarás aquí:
-        // { path: 'contracts', component: ContractsListView... }
-        // { path: 'devices', component: DevicesListView... }
       ]
     },
     {
@@ -124,12 +145,14 @@ router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('grotix_token');
 
   if (!isPublic && !token) {
-    next({ name: 'login' });
-  } else if (isPublic && token) {
-    next({ name: 'dashboard' });
-  } else {
-    next();
-  }
+    return next({ name: 'login' }); 
+  } 
+  
+  if (isPublic && token) {
+    return next({ name: 'dashboard' });
+  } 
+  
+  return next();
 });
 
 export default router
