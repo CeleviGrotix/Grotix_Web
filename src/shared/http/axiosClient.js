@@ -1,7 +1,6 @@
 import axios from 'axios';
 
-// Apuntamos estrictamente al API Gateway (5100) sin la ruta extra
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5100';
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5101';
 
 export const axiosClient = axios.create({
   baseURL,
@@ -11,7 +10,7 @@ export const axiosClient = axios.create({
   timeout: 10000,
 });
 
-// Interceptor de Token
+// Interceptor limpio
 axiosClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('grotix_token');

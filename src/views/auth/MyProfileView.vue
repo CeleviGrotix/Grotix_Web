@@ -176,6 +176,7 @@ onMounted(async () => {
   }
 });
 
+<<<<<<< HEAD
 const retryLoad = async () => {
   await profileStore.fetchMyProfile();
 };
@@ -204,6 +205,9 @@ const handleSave = async () => {
     alert('Hubo un error al guardar los cambios. Revisa la consola.');
   }
 };
+=======
+const goEdit = () => alert('Edit coming soon');
+>>>>>>> 59797d2a683750501ca7f8d11e4a99080e87f930
 
 const handleLogout = () => {
   authStore.logout();
@@ -212,6 +216,7 @@ const handleLogout = () => {
 </script>
 
 <style scoped>
+<<<<<<< HEAD
 /* --- Layout Base --- */
 .profile-page-wrapper {
   min-height: 100vh;
@@ -345,6 +350,45 @@ const handleLogout = () => {
 .info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+=======
+.page-container {
+  max-width: 700px;
+  width: 100%;
+  padding-bottom: 2rem;
+}
+
+/* --- HEADER --- */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.page-header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.line-decorator {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--blue-cerulean), transparent);
+  opacity: 0.5;
+  max-width: 200px;
+}
+
+/* --- CARD --- */
+.profile-card {
+  background-color: #161819;
+  border-radius: 16px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+>>>>>>> 59797d2a683750501ca7f8d11e4a99080e87f930
   gap: 2rem;
 }
 
@@ -378,6 +422,7 @@ const handleLogout = () => {
   gap: 1.5rem;
 }
 
+<<<<<<< HEAD
 .form-group label {
   display: block;
   color: #fff;
@@ -393,12 +438,119 @@ const handleLogout = () => {
 }
 
 .form-actions {
+=======
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 12px;
+  background-color: #2a2e30;
+  padding: 10px;
+  flex-shrink: 0;
+}
+
+.profile-names h2 {
+  margin: 0 0 0.3rem 0;
+  font-size: 1.6rem;
+  color: var(--white);
+  word-break: break-word;
+}
+
+.profile-names p {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.85rem;
+  color: var(--light-grey);
+  word-break: break-word;
+}
+
+/* --- FIELDS --- */
+.field-group { margin-bottom: 1.2rem; }
+
+.green-label {
+  display: block;
+  color: var(--emerald-green);
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.dark-box {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background-color: #2a2e30;
+  color: var(--white);
+  font-family: var(--font-main);
+  box-sizing: border-box;
+  word-break: break-word;
+}
+
+/* --- ACTIONS --- */
+.actions {
+>>>>>>> 59797d2a683750501ca7f8d11e4a99080e87f930
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
+<<<<<<< HEAD
   margin-top: 1rem;
   padding-top: 2rem;
   border-bottom: 1px solid #2d3748;
+=======
+  flex-wrap: wrap;
+}
+
+.feedback-msg {
+  text-align: center;
+  color: var(--blue-cerulean);
+  margin-top: 3rem;
+}
+
+/* ============================================================
+   TABLET (≤ 1024px)
+   ============================================================ */
+@media (max-width: 1024px) {
+  .page-container { max-width: 100%; }
+  .page-header h1 { font-size: 1.75rem; }
+}
+
+/* ============================================================
+   MÓVIL (≤ 768px)
+   ============================================================ */
+@media (max-width: 768px) {
+  .page-header h1 { font-size: 1.5rem; }
+  .line-decorator { max-width: 80px; }
+
+  .profile-card { padding: 1.25rem; gap: 1.5rem; }
+
+  .avatar {
+    width: 72px;
+    height: 72px;
+    padding: 8px;
+  }
+
+  .profile-names h2 { font-size: 1.25rem; }
+
+  /* Botones al ancho completo */
+  .actions { flex-direction: column; }
+  .actions :deep(.gtx-btn) { width: 100%; }
+}
+
+/* ============================================================
+   MÓVIL PEQUEÑO (≤ 480px)
+   ============================================================ */
+@media (max-width: 480px) {
+  .page-header h1 { font-size: 1.25rem; }
+  .line-decorator { display: none; }
+
+  .profile-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .avatar {
+    width: 64px;
+    height: 64px;
+  }
+>>>>>>> 59797d2a683750501ca7f8d11e4a99080e87f930
 }
 
 /* --- Estados --- */

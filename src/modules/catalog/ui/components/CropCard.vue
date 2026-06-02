@@ -35,11 +35,28 @@ defineProps({
   height: 60px;
   border-radius: 8px;
   object-fit: cover;
+  flex-shrink: 0;
 }
 
 .crop-name {
-  color: var(--white, #ffffff);
+  color: var(--white);
   font-weight: 600;
   font-size: 1.1rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   MÓVIL (≤ 480px)
+   ============================================================ */
+@media (max-width: 480px) {
+  .crop-image {
+    width: 48px;
+    height: 48px;
+  }
+
+  .crop-name { font-size: 1rem; }
 }
 </style>

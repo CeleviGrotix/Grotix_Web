@@ -38,15 +38,9 @@ import GtxButton from '@/shared/ui/GtxButton.vue';
 const route = useRoute();
 const router = useRouter();
 
-const form = ref({
-  email: '',
-  password: '',
-  confirmPassword: '',
-  inviteToken: '' // Guardamos el token oculto
-});
+const form = ref({ email: '', password: '', confirmPassword: '', inviteToken: '' });
 
 onMounted(() => {
-  // Capturamos los datos de la URL: /register?email=correo@.com&token=el_token_secreto
   if (route.query.email) form.value.email = route.query.email;
   if (route.query.token) form.value.inviteToken = route.query.token;
 });
@@ -56,22 +50,14 @@ const handleRegister = async () => {
     alert('Las contraseñas no coinciden. Por favor, verifica.');
     return;
   }
-
   try {
-    // Armamos el payload EXACTO como lo pide tu Swagger
-    const payload = {
+    await axiosClient.post('/api/v1/auth/register', {
       email: form.value.email,
       password: form.value.password,
-      inviteToken: form.value.inviteToken 
-    };
-
-    // Hacemos el POST directo sin pasar por un Store (por ser una vista aislada)
-    await axiosClient.post('/api/v1/auth/register', payload);
-    
+      inviteToken: form.value.inviteToken
+    });
     alert('¡Cuenta creada exitosamente! Ahora puedes iniciar sesión.');
-    
-    // Lo redirigimos a la pantalla de login (que armaremos pronto)
-    router.push('/login'); 
+    router.push('/login');
   } catch (error) {
     console.error(error);
     alert('Error al registrar la cuenta. El enlace podría estar vencido o el token es inválido.');
@@ -85,7 +71,8 @@ const handleRegister = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--bg-dark); /* Fondo oscuro general */
+  background-color: var(--bg-dark);
+  padding: 1rem;
 }
 
 .register-card {
@@ -94,16 +81,58 @@ const handleRegister = async () => {
   border-radius: 16px;
   width: 100%;
   max-width: 450px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   text-align: center;
 }
 
-.logo-placeholder { font-size: 2rem; font-weight: 800; color: var(--emerald-green); margin-bottom: 1rem; }
+.logo-placeholder {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--emerald-green);
+  margin-bottom: 1rem;
+}
+
 .register-card h2 { color: white; margin-bottom: 0.5rem; }
 .register-card p { color: gray; margin-bottom: 2rem; font-size: 0.9rem; }
 
 .form-group { margin-bottom: 1.2rem; text-align: left; }
-.form-group label { display: block; color: var(--blue-cerulean); margin-bottom: 0.5rem; font-size: 0.85rem; font-weight: 600; }
-.dark-input { width: 100%; padding: 12px; border-radius: 8px; background-color: #2a2e30; border: none; color: white; outline: none; font-family: var(--font-main); }
-.dark-input:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.form-group label {
+  display: block;
+  color: var(--blue-cerulean);
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.dark-input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: #2a2e30;
+  border: none;
+  color: white;
+  outline: none;
+  font-family: var(--font-main);
+  box-sizing: border-box;
+  font-size: 1rem;
+}
+
+.dark-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   MÓVIL (≤ 480px)
+   ============================================================ */
+@media (max-width: 480px) {
+  .register-card {
+    padding: 2rem 1.5rem;
+    border-radius: 12px;
+  }
+
+  .logo-placeholder { font-size: 1.75rem; }
+  .register-card h2 { font-size: 1.25rem; }
+}
 </style>
