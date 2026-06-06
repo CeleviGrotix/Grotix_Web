@@ -18,9 +18,10 @@
             <template #title>{{ client.name }}</template>
             <template #subtitle>Agriculturist</template>
             <template #badge>
-              <GtxBadge :text="client.isActive ? 'ACTIVE' : 'INACTIVE'" />
+              <GtxBadge :text="client.isActive ? 'ACTIVE' : 'INACTIVE'" :variant="client.isActive ? 'success' : 'danger'" />
             </template>
           </GtxCard>
+          <div v-if="profileStore.profiles.length === 0" class="empty-text">No hay clientes activos.</div>
         </div>
       </div>
 
@@ -42,12 +43,21 @@
 
       <div class="column">
         <h3 class="col-title">Devices</h3>
-        <div class="cards-stack">
-          <GtxCard v-for="device in mockDevices" :key="device.id">
-            <template #title>{{ device.code }}</template>
-            <template #subtitle>Microcontroller</template>
-            <template #badge><GtxBadge :text="device.status" /></template>
+        <div v-if="deviceStore.isLoading" class="loading-text">Cargando...</div>
+        <div v-else class="cards-stack">
+          <GtxCard 
+            v-for="device in deviceStore.devicesList" 
+            :key="device.id"
+            @click="router.push(`/devices/${device.id}`)"
+            style="cursor: pointer;"
+          >
+            <template #title>#{{ device.id }}</template>
+            <template #subtitle>{{ device.model || 'Microcontroller' }}</template>
+            <template #badge>
+              <GtxBadge :text="device.status" :variant="getDeviceVariant(device.status)" />
+            </template>
           </GtxCard>
+          <div v-if="deviceStore.devicesList.length === 0" class="empty-text">No hay dispositivos registrados.</div>
         </div>
       </div>
 
@@ -60,12 +70,15 @@ import { onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useProfileStore } from '@/modules/profiles/application/useProfileStore';
 import { useContractsStore } from '@/modules/contracts/application/useContractsStore';
+import { useDeviceStore } from '@/modules/devices/application/useDeviceStore'; // 1. Importamos el Store de Devices
+
 import GtxCard from '@/shared/ui/GtxCard.vue';
 import GtxBadge from '@/shared/ui/GtxBadge.vue';
 
 const router = useRouter();
 const profileStore = useProfileStore();
 const contractStore = useContractsStore();
+const deviceStore = useDeviceStore(); // 2. Inicializamos el Store
 
 const orderedContracts = computed(() => {
   return contractStore.associations
@@ -73,17 +86,20 @@ const orderedContracts = computed(() => {
     .sort((a, b) => new Date(b.contractStart) - new Date(a.contractStart));
 });
 
-const mockDevices = [
-  { id: 1, code: '#HF32A1', status: 'ONLINE' },
-  { id: 2, code: '#S23W1D', status: 'OFFLINE' },
-  { id: 3, code: '#KP91B7', status: 'ONLINE' },
-  { id: 4, code: '#TM44X2', status: 'OFFLINE' }
-];
+// 3. Función para darle color al GtxBadge dependiendo del estado del dispositivo
+const getDeviceVariant = (status) => {
+  const s = status ? status.toLowerCase() : '';
+  if (s === 'online') return 'success';
+  if (s === 'maintenance') return 'warning';
+  return 'danger';
+};
 
 onMounted(async () => {
+  // 4. Agregamos el fetchDevices a la promesa principal para que cargue todo en paralelo
   await Promise.all([
     profileStore.fetchProfiles(),
-    contractStore.fetchAssociations()
+    contractStore.fetchAssociations(),
+    deviceStore.fetchDevices()
   ]);
 });
 </script>
@@ -183,7 +199,6 @@ onMounted(async () => {
     text-align: center;
   }
 
-  /* Las líneas decorativas se acortan en móvil */
   .dashboard-header::before,
   .dashboard-header::after {
     max-width: 60px;

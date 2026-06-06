@@ -55,7 +55,11 @@
           </div>
         </div>
 
-        <div v-else-if="item.type === 'device'" class="res-card">
+        <div
+          v-else-if="item.type === 'device'"
+          class="res-card clickable-result"
+          @click="router.push(`/devices/${item.id}`)"
+        >
           <div class="res-info">
             <h3 class="device-id">{{ item.title }}</h3>
             <p>{{ item.subtitle }}</p>

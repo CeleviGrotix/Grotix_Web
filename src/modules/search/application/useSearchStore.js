@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { axiosClient } from '@/shared/http/axiosClient';
+import { useDeviceStore } from '@/modules/devices/application/useDeviceStore';
 
 export const useSearchStore = defineStore('search', {
   state: () => ({
@@ -8,35 +9,42 @@ export const useSearchStore = defineStore('search', {
     error: null,
     query: ''
   }),
-actions: {
+  actions: {
     async performSearch(term = '') {
       this.query = term;
       this.isLoading = true;
       try {
         const { data } = await axiosClient.get(`/api/v1/search?q=${term}`);
-        
-        // --- HARDCODE PARA LA ENTREGA ---
-        const mockDevices = [
-          {
-            id: 999,
-            type: 'device',
-            title: '#HF32A1',
-            subtitle: 'Microcontroller',
-            status: 'ONLINE'
-          },
-          {
-            id: 1000,
-            type: 'device',
-            title: '#S23W1D',
-            subtitle: 'Microcontroller',
-            status: 'OFFLINE'
-          }
-        ];
 
-        // Combinamos lo real con lo de mentira
-        this.results = [...data, ...mockDevices];
-        // --------------------------------
-        
+        // Quitamos los devices que vienen del backend (son los mockeados)
+        const nonDeviceResults = data.filter(item => item.type !== 'device');
+
+        // Traemos los devices reales del store
+        const deviceStore = useDeviceStore();
+        await deviceStore.fetchDevices();
+
+        const realDevices = deviceStore.devicesList
+          .filter(d => {
+            if (!term) return true;
+            const q = term.toLowerCase();
+            return (
+              String(d.id).toLowerCase().includes(q) ||
+              (d.model || '').toLowerCase().includes(q) ||
+              (d.status || '').toLowerCase().includes(q)
+            );
+          })
+          .map(d => ({
+            id: d.id,
+            type: 'device',
+            title: `#${d.id}`,
+            subtitle: d.model || 'Microcontroller',
+            status: d.status ?? 'UNKNOWN',
+            lastMaintenance: d.lastMaintenance ?? null
+          }));
+
+        // Solo resultados no-device del backend + devices reales del store
+        this.results = [...nonDeviceResults, ...realDevices];
+
       } catch (err) {
         this.error = 'Error';
       } finally {
