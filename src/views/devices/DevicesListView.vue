@@ -8,13 +8,37 @@
       </div>
       
       <div class="tabs-container">
-        <button :class="{ active: currentTab === 'LIST' }" @click="currentTab = 'LIST'">LIST</button>
-        <button :class="{ active: currentTab === 'LOGBOOK' }" @click="currentTab = 'LOGBOOK'">LOGBOOK</button>
-        <button :class="{ active: currentTab === 'MAINTENANCE' }" @click="currentTab = 'MAINTENANCE'">MAINTENANCE</button>
-        <div class="icon-right">
-          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 21v-7m0-4V3m8 18v-9m0-4V3m8 18v-5m0-4V3M1 14h6M9 8h6M17 16h6"></path></svg>
+        <button class="active">LIST</button>
+        <button @click="$router.push('/devices/logbook')">LOGBOOK</button>
+        <button @click="$router.push('/devices/maintenance')">MAINTENANCE</button>
+        
+        <div class="icon-right" @click="toggleFilters" :class="{ 'icon-active': showFilters }" title="Filtrar dispositivos">
+          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+          </svg>
         </div>
       </div>
+
+      <transition name="slide-fade">
+        <div v-if="showFilters" class="filters-panel">
+          <div class="filter-group">
+            <label>Buscar</label>
+            <input type="text" v-model="searchQuery" placeholder="ID o Modelo..." class="filter-input">
+          </div>
+          <div class="filter-group">
+            <label>Estado</label>
+            <select v-model="statusFilter" class="filter-select">
+              <option value="ALL">Todos</option>
+              <option value="ONLINE">Online</option>
+              <option value="OFFLINE">Offline</option>
+              <option value="MAINTENANCE">Maintenance</option>
+            </select>
+          </div>
+          <button class="btn-clear" @click="clearFilters" v-if="searchQuery || statusFilter !== 'ALL'">
+            Limpiar Filtros
+          </button>
+        </div>
+      </transition>
     </header>
 
     <div v-if="deviceStore.isLoading" class="loading-state">
@@ -25,127 +49,89 @@
       {{ deviceStore.errorMessage }}
     </div>
 
-    <div v-else-if="currentTab === 'LIST' || currentTab === 'MAINTENANCE'" class="devices-grid">
-      <div v-for="device in deviceStore.devicesList" :key="device.id" class="device-card" @click="goToDetail(device.id)">
+    <div v-else class="devices-grid">
+      <div v-for="device in filteredDevices" :key="device.id" class="device-card" @click="goToDetail(device.id)">
         <div class="card-header">
           <h3>#{{ device.id }}</h3>
-          <span :class="['badge', device.status.toLowerCase() === 'online' ? 'badge-success' : 'badge-danger']">
+          
+          <span :class="['badge', getBadgeClass(device.status)]">
             {{ device.status }}
           </span>
         </div>
         <p class="subtitle">{{ device.model || 'Microcontroller' }}</p>
         
-        <p class="last-seen">Last maintenance: {{ formatDate(device.lastMaintenanceDate) || 'N/A' }}</p>
-        
-        <div v-if="currentTab === 'MAINTENANCE'" class="maintenance-actions">
-          <button 
-            v-if="device.status.toLowerCase() !== 'maintenance'" 
-            class="btn-start"
-            @click.stop="toggleMaintenance(device.id, 'MAINTENANCE')">
-            START MAINTENANCE
-          </button>
-          <button 
-            v-else 
-            class="btn-end"
-            @click.stop="toggleMaintenance(device.id, 'ONLINE')">
-            END MAINTENANCE
-          </button>
-        </div>
+        <p class="last-seen">Last maintenance: {{ formatDate(device.lastSeen) || 'N/A' }}</p>
       </div>
       
-      <p v-if="deviceStore.devicesList.length === 0" class="empty-msg">No hay dispositivos registrados.</p>
-    </div>
-
-    <div v-else-if="currentTab === 'LOGBOOK'" class="logbook-section">
-      <div class="logbook-card">
-        <div class="form-group">
-          <label>Device ID</label>
-          <input type="text" v-model="logForm.deviceId" placeholder="Ej: 1" class="dark-input">
-        </div>
-        
-        <div class="form-group">
-          <label class="green-text">Action</label>
-          <textarea v-model="logForm.action" rows="4" placeholder="Limpieza de sensor..." class="dark-input"></textarea>
-        </div>
-
-        <div class="form-group">
-          <label class="green-text">Status After</label>
-          <div class="status-selector">
-             <span 
-               :class="['badge', logForm.statusAfter === 'ONLINE' ? 'badge-success' : 'badge-outline']"
-               @click="logForm.statusAfter = 'ONLINE'" style="cursor:pointer;">
-               ONLINE
-             </span>
-             <span 
-               :class="['badge', logForm.statusAfter === 'OFFLINE' ? 'badge-danger' : 'badge-outline']"
-               @click="logForm.statusAfter = 'OFFLINE'" style="cursor:pointer;">
-               OFFLINE
-             </span>
-          </div>
-        </div>
-
-        <div class="form-actions">
-          <button class="btn-save" @click="submitLog">SAVE</button>
-          <button class="btn-cancel" @click="resetForm">CANCEL</button>
-        </div>
+      <div class="empty-msg-container" v-if="filteredDevices.length === 0">
+        <p v-if="deviceStore.devicesList.length === 0" class="empty-msg">No hay dispositivos registrados en el sistema.</p>
+        <p v-else class="empty-msg">No se encontraron dispositivos con esos filtros.</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useDeviceStore } from '@/modules/devices/application/useDeviceStore';
 
 const router = useRouter();
 const deviceStore = useDeviceStore();
-const currentTab = ref('LIST');
 
-// Variables renombradas exactamente igual al Swagger
-const logForm = ref({ deviceId: '', action: '', statusAfter: 'ONLINE' });
+// --- ESTADOS PARA LOS FILTROS ---
+const showFilters = ref(false);
+const searchQuery = ref('');
+const statusFilter = ref('ALL');
 
 onMounted(() => {
   deviceStore.fetchDevices();
 });
 
+// --- LÓGICA DE FILTRADO (Propiedad Computada) ---
+const filteredDevices = computed(() => {
+  let list = deviceStore.devicesList;
+
+  // 1. Filtrar por Estado (si no es 'ALL')
+  if (statusFilter.value !== 'ALL') {
+    list = list.filter(d => {
+      const status = d.status ? d.status.toUpperCase() : '';
+      return status === statusFilter.value;
+    });
+  }
+
+  // 2. Filtrar por Texto (ID o Modelo)
+  if (searchQuery.value.trim() !== '') {
+    const query = searchQuery.value.toLowerCase().trim();
+    list = list.filter(d => {
+      const idMatch = String(d.id).includes(query);
+      const modelMatch = d.model && d.model.toLowerCase().includes(query);
+      return idMatch || modelMatch;
+    });
+  }
+
+  return list;
+});
+
+// --- MÉTODOS ---
+const toggleFilters = () => {
+  showFilters.value = !showFilters.value;
+};
+
+const clearFilters = () => {
+  searchQuery.value = '';
+  statusFilter.value = 'ALL';
+};
+
 const goToDetail = (id) => {
   router.push(`/devices/${id}`);
 };
 
-const toggleMaintenance = async (id, newStatus) => {
-  try {
-    await deviceStore.changeStatus(id, newStatus);
-  } catch (error) {
-    alert("Hubo un error al cambiar el estado.");
-  }
-};
-
-const resetForm = () => {
-  logForm.value = { deviceId: '', action: '', statusAfter: 'ONLINE' };
-};
-
-const submitLog = async () => {
-  if (!logForm.value.deviceId || !logForm.value.action) {
-    return alert("Llena el ID del dispositivo y la acción realizada");
-  }
-  
-  try {
-    // ARMAMOS EL JSON EXACTO QUE PIDE TU SWAGGER (Elegante y limpio)
-    const payload = {
-      action: logForm.value.action,
-      statusAfter: logForm.value.statusAfter
-    };
-
-    // Se lo pasamos al Store
-    await deviceStore.saveLog(logForm.value.deviceId, payload);
-    
-    alert("¡Guardado exitoso!");
-    resetForm();
-  } catch (error) {
-    alert("Error al guardar.");
-    console.error(error);
-  }
+const getBadgeClass = (status) => {
+  const s = status ? status.toLowerCase() : '';
+  if (s === 'online') return 'badge-success';
+  if (s === 'maintenance') return 'badge-warning';
+  return 'badge-danger'; 
 };
 
 const formatDate = (dateString) => {
@@ -165,30 +151,11 @@ const formatDate = (dateString) => {
 }
 
 /* Header and Decorators */
-.page-header {
-  margin-bottom: 2rem;
-}
-.header-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-.header-content h2 {
-  font-size: 2.2rem;
-  font-weight: 800;
-  margin: 0;
-}
-.line-decorator {
-  flex: 1;
-  height: 2px;
-  background: linear-gradient(90deg, #10b981, transparent);
-  opacity: 0.7;
-}
-.line-decorator.reverse {
-  background: linear-gradient(270deg, #10b981, transparent);
-}
+.page-header { margin-bottom: 2rem; }
+.header-content { display: flex; align-items: center; justify-content: center; gap: 1.5rem; margin-bottom: 1.5rem; }
+.header-content h2 { font-size: 2.2rem; font-weight: 800; margin: 0; }
+.line-decorator { flex: 1; height: 2px; background: linear-gradient(90deg, #10b981, transparent); opacity: 0.7; }
+.line-decorator.reverse { background: linear-gradient(270deg, #10b981, transparent); }
 
 /* Tabs */
 .tabs-container {
@@ -210,20 +177,65 @@ const formatDate = (dateString) => {
   cursor: pointer;
   transition: all 0.3s;
 }
-.tabs-container button:hover {
-  background: rgba(255,255,255,0.1);
-}
-.tabs-container button.active {
-  background-color: #1a4d4e;
-  border-color: #1a4d4e;
-  color: #20c997;
-}
+.tabs-container button:hover { background: rgba(255,255,255,0.1); }
+.tabs-container button.active { background-color: #1a4d4e; border-color: #1a4d4e; color: #20c997; }
+
+/* Filter Icon */
 .icon-right {
   position: absolute;
   right: 10px;
-  color: #fff;
+  color: #a0aec0;
   cursor: pointer;
+  transition: color 0.3s, transform 0.3s;
+  padding: 5px;
+  border-radius: 50%;
 }
+.icon-right:hover { color: #10b981; background: rgba(16, 185, 129, 0.1); }
+.icon-active { color: #10b981; transform: scale(1.1); }
+
+/* Filter Panel */
+.filters-panel {
+  display: flex;
+  align-items: flex-end;
+  gap: 15px;
+  padding: 1.5rem;
+  background-color: #161819;
+  border-radius: 0 0 12px 12px;
+  border: 1px solid #2d3748;
+  border-top: none;
+  margin-top: -1px; /* Para solapar el borde del tab */
+}
+.filter-group { display: flex; flex-direction: column; gap: 5px; }
+.filter-group label { font-size: 0.8rem; color: #a0aec0; font-weight: bold; text-transform: uppercase; }
+.filter-input, .filter-select {
+  background-color: #2d3748;
+  border: 1px solid #4a5568;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  min-width: 150px;
+}
+.filter-input:focus, .filter-select:focus { outline: 1px solid #10b981; }
+.btn-clear {
+  background: transparent;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  cursor: pointer;
+  height: 36px;
+  transition: all 0.2s;
+}
+.btn-clear:hover { background: rgba(239, 68, 68, 0.1); }
+
+/* Transición para ocultar/mostrar panel */
+.slide-fade-enter-active { transition: all 0.3s ease-out; }
+.slide-fade-leave-active { transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1); }
+.slide-fade-enter-from, .slide-fade-leave-to { transform: translateY(-10px); opacity: 0; }
 
 /* Grid and Cards */
 .devices-grid {
@@ -239,88 +251,20 @@ const formatDate = (dateString) => {
   border: 1px solid transparent;
   transition: border-color 0.3s;
 }
-.device-card:hover {
-  border-color: #2d3748;
-}
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.card-header h3 {
-  margin: 0;
-  font-size: 1.2rem;
-}
-.subtitle {
-  color: #a0aec0;
-  font-size: 0.85rem;
-  margin: 5px 0 25px 0;
-}
-.last-seen {
-  font-size: 0.8rem;
-  color: #a0aec0;
-  margin: 0;
-}
+.device-card:hover { border-color: #2d3748; }
+.card-header { display: flex; justify-content: space-between; align-items: center; }
+.card-header h3 { margin: 0; font-size: 1.2rem; }
+.subtitle { color: #a0aec0; font-size: 0.85rem; margin: 5px 0 25px 0; }
+.last-seen { font-size: 0.8rem; color: #a0aec0; margin: 0; }
 
 /* Badges */
-.badge {
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: bold;
-}
+.badge { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; }
 .badge-success { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981;}
+.badge-warning { background: rgba(234, 179, 8, 0.2); color: #eab308; border: 1px solid #eab308;}
 .badge-danger { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444;}
-.badge-outline { border: 1px solid #fff; color: #fff; }
-
-/* Maintenance Buttons */
-.maintenance-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 15px;
-}
-.btn-start { background: transparent; border: none; color: #10b981; font-weight: bold; cursor: pointer; }
-.btn-end { background: #3182ce; border: none; color: white; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-
-/* Logbook Form */
-.logbook-section {
-  max-width: 800px;
-}
-.logbook-card {
-  background-color: #161819;
-  border-radius: 12px;
-  padding: 2rem;
-}
-.form-group {
-  margin-bottom: 1.5rem;
-}
-.form-group label {
-  display: block;
-  color: #3182ce;
-  font-size: 0.9rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-}
-.green-text { color: #10b981 !important; }
-.dark-input {
-  width: 100%;
-  background-color: #2d3748;
-  border: none;
-  color: white;
-  padding: 12px;
-  border-radius: 6px;
-  font-family: inherit;
-}
-.status-selector { display: flex; gap: 10px;}
-.form-actions {
-  display: flex;
-  gap: 15px;
-  margin-top: 2rem;
-}
-.btn-save { background-color: #1a4d4e; color: #20c997; border: none; padding: 10px 24px; border-radius: 20px; font-weight: bold; cursor: pointer; }
-.btn-cancel { background-color: transparent; color: #ef4444; border: 1px solid #ef4444; padding: 10px 24px; border-radius: 20px; font-weight: bold; cursor: pointer; }
 
 /* Utils */
+.empty-msg-container { grid-column: 1 / -1; }
 .loading-state, .error-state, .empty-msg { text-align: center; padding: 3rem; color: #a0aec0;}
 .spinner { width: 40px; height: 40px; border: 4px solid #2d3748; border-top-color: #10b981; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;}
 @keyframes spin { to { transform: rotate(360deg); } }

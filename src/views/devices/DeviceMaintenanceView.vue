@@ -11,9 +11,6 @@
         <button @click="$router.push('/devices')">LIST</button>
         <button @click="$router.push('/devices/logbook')">LOGBOOK</button>
         <button class="active">MAINTENANCE</button>
-        <div class="icon-right">
-          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 21v-7m0-4V3m8 18v-9m0-4V3m8 18v-5m0-4V3M1 14h6M9 8h6M17 16h6"></path></svg>
-        </div>
       </div>
     </header>
 
@@ -30,7 +27,7 @@
         </div>
         <p class="subtitle">{{ device.model || 'Microcontroller' }}</p>
         
-        <p class="last-seen">Last maintenance: {{ formatDate(device.lastMaintenanceDate) || 'N/A' }}</p>
+        <p class="last-seen">Last maintenance: {{ formatDate(device.lastSeen) || 'N/A' }}</p>
         
         <div class="maintenance-actions">
           <button 
@@ -89,7 +86,6 @@ const formatDate = (dateString) => {
 .tabs-container button { background: transparent; border: 1px solid #fff; color: #fff; padding: 8px 24px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.3s;}
 .tabs-container button:hover { background: rgba(255,255,255,0.1); }
 .tabs-container button.active { background-color: #1a4d4e; border-color: #1a4d4e; color: #20c997; }
-.icon-right { position: absolute; right: 10px; color: #fff; cursor: pointer; }
 .devices-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;}
 .device-card { background-color: #161819; border-radius: 12px; padding: 1.5rem; border: 1px solid transparent;}
 .card-header { display: flex; justify-content: space-between; align-items: center; }

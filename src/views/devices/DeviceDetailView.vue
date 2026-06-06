@@ -12,7 +12,7 @@
       <header class="detail-header">
         <button class="back-btn" @click="goBack">
           <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M15 18l-6-6 6-6"></path></svg>
-          Device
+          Device #{{ deviceStore.currentDevice.id }}
         </button>
         <div class="line-decorator"></div>
       </header>
@@ -24,10 +24,12 @@
           <div class="info-group"><label class="blue-text">Zone ID</label><div class="dark-box">{{ deviceStore.currentDevice.zoneId || 'Unassigned' }}</div></div>
           <div class="info-group"><label class="green-text">Model</label><div class="dark-box">{{ deviceStore.currentDevice.model || 'N/A' }}</div></div>
           <div class="info-group"><label class="red-text">MAC Address</label><div class="dark-box">{{ deviceStore.currentDevice.macAddress || 'N/A' }}</div></div>
-          <div class="info-group"><label class="green-text">Last Seen</label><div class="dark-box">{{ formatDate(deviceStore.currentDevice.lastMaintenanceDate) }}</div></div>
+          
+          <div class="info-group"><label class="green-text">Last Seen</label><div class="dark-box">{{ formatDate(deviceStore.currentDevice.lastSeen) }}</div></div>
+          
           <div class="info-group">
             <label class="blue-text">Status</label>
-            <div><span :class="['badge', deviceStore.currentDevice.status?.toLowerCase() === 'online' ? 'badge-success' : 'badge-danger']">{{ deviceStore.currentDevice.status || 'UNKNOWN' }}</span></div>
+            <div><span :class="['badge', getBadgeClass(deviceStore.currentDevice.status)]">{{ deviceStore.currentDevice.status || 'UNKNOWN' }}</span></div>
           </div>
         </div>
 
@@ -61,6 +63,14 @@ onMounted(() => {
 
 const goBack = () => router.push('/devices');
 
+// Función unificada para los colores de estado
+const getBadgeClass = (status) => {
+  const s = status ? status.toLowerCase() : '';
+  if (s === 'online') return 'badge-success';
+  if (s === 'maintenance') return 'badge-warning';
+  return 'badge-danger';
+};
+
 const formatDate = (dateString) => {
   if(!dateString) return 'N/A';
   const d = new Date(dateString);
@@ -71,7 +81,7 @@ const formatDate = (dateString) => {
 <style scoped>
 .device-detail-wrapper { padding: 2rem; background-color: #0f111a; min-height: 100vh; color: #fff; font-family: 'Inter', sans-serif;}
 .detail-header { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem;}
-.back-btn { background: none; border: none; color: white; font-size: 1.8rem; font-weight: 800; cursor: pointer; display: flex; align-items: center;}
+.back-btn { background: none; border: none; color: white; font-size: 1.8rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;}
 .line-decorator { flex: 1; height: 2px; background: linear-gradient(90deg, #10b981, transparent); opacity: 0.7;}
 .content-layout { display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px;}
 .hardware-info-card { background-color: #161819; border-radius: 12px; padding: 2rem; height: fit-content;}
@@ -86,10 +96,14 @@ const formatDate = (dateString) => {
 .log-date { color: white; margin: 0 0 10px 0; font-size: 1rem;}
 .log-desc { color: #a0aec0; font-size: 0.9rem; line-height: 1.6; margin: 0;}
 .empty-logs { color: #a0aec0; font-style: italic; }
+
+/* Estilos de Badges mejorados */
 .badge { padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; }
 .badge-success { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981;}
+.badge-warning { background: rgba(234, 179, 8, 0.2); color: #eab308; border: 1px solid #eab308;}
 .badge-danger { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444;}
 .badge-outline { border: 1px solid #fff; color: #fff; font-size: 0.7rem;}
+
 .mt-2 { margin-top: 10px; display: inline-block; }
 .loading-state, .error-state { text-align: center; padding: 3rem; color: #a0aec0;}
 .spinner { width: 40px; height: 40px; border: 4px solid #2d3748; border-top-color: #10b981; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;}
