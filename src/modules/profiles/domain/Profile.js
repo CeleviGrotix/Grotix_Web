@@ -4,7 +4,7 @@ export class Profile {
     this.name = data.name || 'Usuario Sin Nombre';
     this.email = data.email || 'Sin correo';
     this.phone = data.phone || 'Sin teléfono';
-    
+    this.taxId = data.taxId || 'Sin ID fiscal';
     this.roleId = data.roleId;
     this.associationId = data.associationId;
     

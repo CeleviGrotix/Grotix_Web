@@ -301,9 +301,30 @@ const handleSave = async () => {
     });
 
     isEditing.value = false;
+    alert('¡Perfil actualizado correctamente!'); // Feedback positivo cuando sí funciona
   } catch (err) {
-    console.error(err);
-    alert('Hubo un error al guardar los cambios.');
+    console.error('[Error al guardar perfil]', err);
+
+    let errorMessage = 'Error desconocido en el servidor.';
+
+    // Extraemos los errores de validación típicos de .NET (Error 400)
+    if (err?.response?.data) {
+      const data = err.response.data;
+      
+      if (data.errors && Object.keys(data.errors).length > 0) {
+        // Si hay errores de validación, tomamos el primero de la lista para mostrarlo
+        const firstErrorKey = Object.keys(data.errors)[0];
+        errorMessage = data.errors[firstErrorKey][0];
+      } else if (data.message) {
+        errorMessage = data.message;
+      } else if (data.title) {
+        errorMessage = data.title;
+      }
+    } else if (err?.message) {
+      errorMessage = err.message;
+    }
+
+    alert(`No se pudo guardar:\n\n${errorMessage}`);
   }
 };
 
