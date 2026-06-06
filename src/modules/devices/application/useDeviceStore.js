@@ -85,9 +85,11 @@ export const useDeviceStore = defineStore('devices', {
       }
     },
 
-    // ── NUEVA ACCIÓN: Log + Cambio de status en un solo lugar ──
+    // ── LA CORRECCIÓN ESTÁ AQUÍ 👇 ──
     async saveLogAndChangeStatus(deviceId, logPayload) {
       const idStr = String(deviceId);
+      
+      // Traducimos de "OFFLINE" a "Offline"
       const formatted = StatusMap[String(logPayload.statusAfter).toUpperCase()] ?? StatusMap.OFFLINE;
 
       console.log('[saveLogAndChangeStatus] INICIO | device:', idStr, '| status:', formatted);
@@ -95,7 +97,15 @@ export const useDeviceStore = defineStore('devices', {
       try {
         // PASO 1: Crear el log
         console.log('[saveLogAndChangeStatus] Creando log...');
-        await DeviceApi.createMaintenanceLog(idStr, logPayload);
+        
+        // ¡OJO AQUÍ! Creamos un nuevo objeto asegurándonos de usar la palabra formateada ("Offline")
+        const formattedLogPayload = {
+            action: logPayload.action,
+            statusAfter: formatted 
+        };
+        
+        // Enviamos el objeto ya formateado
+        await DeviceApi.createMaintenanceLog(idStr, formattedLogPayload);
         console.log('[saveLogAndChangeStatus] Log creado OK');
 
         // PASO 2: Cambiar el estado
@@ -119,6 +129,10 @@ export const useDeviceStore = defineStore('devices', {
 
     async saveLog(deviceId, payload) {
       try {
+        // En caso de que se llame por separado, también curamos en salud el texto aquí
+        if (payload.statusAfter) {
+            payload.statusAfter = StatusMap[String(payload.statusAfter).toUpperCase()] ?? StatusMap.OFFLINE;
+        }
         await DeviceApi.createMaintenanceLog(String(deviceId), payload);
         console.log('[saveLog] Log creado OK');
       } catch (error) {

@@ -1,13 +1,15 @@
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5101';
+// Vite lee la URL de Azure desde el archivo .env. 
+// Si por algún motivo el archivo .env no existe, intentará usar el localhost.
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5100';
 
 export const axiosClient = axios.create({
   baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000,
+  timeout: 30000,
 });
 
 // Interceptor limpio
