@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-// 1. Importamos el Layout Principal
+// Importamos el Layout Principal
 import StaffLayout from '@/shared/layouts/StaffLayout.vue'
 
-// 2. Importamos las Vistas (Views) sin incluir Devices aquí
+// Importamos las Vistas
 import DashboardView from '@/views/DashboardView.vue'
 import AgriculturistsListView from '@/views/profiles/AgriculturistsListView.vue.vue'
 import CropsListView from '@/views/catalog/CropsListView.vue'
