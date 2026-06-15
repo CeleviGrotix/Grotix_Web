@@ -15,7 +15,7 @@
           <label>Password</label>
           <input type="password" class="dark-input" v-model="form.password" required placeholder="••••••••" />
         </div>
-
+        <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
         <GtxButton variant="primary" style="width: 100%; margin-top: 1.5rem;" type="submit">
           {{ authStore.isLoading ? 'LOADING...' : 'LOGIN' }}
         </GtxButton>
@@ -32,15 +32,18 @@ import GtxButton from '@/shared/ui/GtxButton.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const errorMessage = ref('');
+
 
 const form = ref({ email: '', password: '' });
 
 const handleLogin = async () => {
+  errorMessage.value = '';
   try {
     await authStore.login(form.value.email, form.value.password);
     router.push('/');
-  } catch {
-    alert('Usuario o contraseña incorrectos. Por favor, verifica.');
+  } catch (error) {
+    errorMessage.value = error.message;
   }
 };
 </script>
@@ -63,6 +66,13 @@ const handleLogin = async () => {
   max-width: 400px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   text-align: center;
+}
+
+.error-text {
+  color: #FF5757;
+  font-size: 0.85rem;
+  margin-top: 1rem;
+  text-align: left;
 }
 
 .logo-placeholder {

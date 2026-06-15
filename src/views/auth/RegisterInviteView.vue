@@ -2,43 +2,62 @@
   <div class="auth-layout">
     <div class="register-card">
       <div class="logo-placeholder">Grotix</div>
-      <h2>Complete your registration</h2>
-      <p>Set your password to join the platform.</p>
 
-      <form @submit.prevent="handleRegister">
-        <div class="form-group">
-          <label>Email (Invited)</label>
-          <input type="email" class="dark-input" v-model="form.email" disabled />
-        </div>
+      <template v-if="isValidLink">
+        <h2>Complete your registration</h2>
+        <p>Set your password to join the platform.</p>
 
-        <div class="form-group">
-          <label>Password</label>
-          <input type="password" class="dark-input" v-model="form.password" required />
-        </div>
+        <form @submit.prevent="handleRegister">
+          <div class="form-group">
+            <label>Email (Invited)</label>
+            <input type="email" class="dark-input" v-model="form.email" disabled />
+          </div>
 
-        <div class="form-group">
-          <label>Confirm Password</label>
-          <input type="password" class="dark-input" v-model="form.confirmPassword" required />
-        </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" class="dark-input" v-model="form.password" required />
+          </div>
 
-        <GtxButton variant="primary" style="width: 100%; margin-top: 1rem;" type="submit">
-          CREATE ACCOUNT
-        </GtxButton>
-      </form>
+          <div class="form-group">
+            <label>Confirm Password</label>
+            <input type="password" class="dark-input" v-model="form.confirmPassword" required />
+          </div>
+
+          <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
+
+          <GtxButton
+            variant="primary"
+            style="width: 100%; margin-top: 1rem;"
+            type="submit"
+            :disabled="authStore.isLoading"
+          >
+            {{ authStore.isLoading ? 'CREATING ACCOUNT...' : 'CREATE ACCOUNT' }}
+          </GtxButton>
+        </form>
+      </template>
+
+      <template v-else>
+        <h2>Invalid invite link</h2>
+        <p>This link is missing required information. Please request a new invitation.</p>
+      </template>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { axiosClient } from '@/shared/http/axiosClient';
+import { useAuthStore } from '@/modules/auth/application/useAuthStore';
 import GtxButton from '@/shared/ui/GtxButton.vue';
 
 const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore();
 
 const form = ref({ email: '', password: '', confirmPassword: '', inviteToken: '' });
+const errorMessage = ref('');
+
+const isValidLink = computed(() => !!form.value.email && !!form.value.inviteToken);
 
 onMounted(() => {
   if (route.query.email) form.value.email = route.query.email;
@@ -46,21 +65,18 @@ onMounted(() => {
 });
 
 const handleRegister = async () => {
+  errorMessage.value = '';
+
   if (form.value.password !== form.value.confirmPassword) {
-    alert('Las contraseñas no coinciden. Por favor, verifica.');
+    errorMessage.value = 'Las contraseñas no coinciden.';
     return;
   }
+
   try {
-    await axiosClient.post('/api/v1/auth/register', {
-      email: form.value.email,
-      password: form.value.password,
-      inviteToken: form.value.inviteToken
-    });
-    alert('¡Cuenta creada exitosamente! Ahora puedes iniciar sesión.');
-    router.push('/login');
+    await authStore.register(form.value.email, form.value.password, form.value.inviteToken);
+    router.push({ name: 'login', query: { registered: 'true' } });
   } catch (error) {
-    console.error(error);
-    alert('Error al registrar la cuenta. El enlace podría estar vencido o el token es inválido.');
+    errorMessage.value = error.message;
   }
 };
 </script>
@@ -116,6 +132,13 @@ const handleRegister = async () => {
   font-family: var(--font-main);
   box-sizing: border-box;
   font-size: 1rem;
+}
+
+.error-text {
+  color: var(--red-coral, #FF5757);
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  text-align: left;
 }
 
 .dark-input:disabled {

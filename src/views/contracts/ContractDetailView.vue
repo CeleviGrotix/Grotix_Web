@@ -93,13 +93,48 @@
             <a :href="generatedContractLink" target="_blank">{{ generatedContractLink }}</a>
           </div>
         </div>
-
         <!-- CARD 2: Members -->
         <div class="form-card">
           <h3 class="section-title">2. Active Members</h3>
           <p class="subtitle">Users currently registered under this association.</p>
 
-          <div class="users-list">
+          <!-- Formulario de invitación -->
+          <div class="invite-section">
+            <h4 class="admin-title">Invite Member</h4>
+            <p class="admin-subtitle">Generate a registration link for a new member.</p>
+
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" class="dark-input" v-model="inviteForm.email" placeholder="member@organizacion.com" />
+            </div>
+
+            <div class="form-group">
+              <label>Role</label>
+              <select class="dark-input" v-model="inviteForm.roleId">
+                <option :value="4">Basic User</option>
+                <option :value="5">Advanced User</option>
+              </select>
+            </div>
+
+            <p v-if="inviteStore.errorMessage" class="error-text">{{ inviteStore.errorMessage }}</p>
+
+            <GtxButton
+              variant="primary"
+              style="width: 100%; margin-top: 0.5rem;"
+              :disabled="inviteStore.isLoading"
+              @click="handleCreateInvite"
+            >
+              {{ inviteStore.isLoading ? 'GENERATING...' : 'GENERATE INVITE LINK' }}
+            </GtxButton>
+
+            <div v-if="generatedMemberLink" class="magic-link-box" style="margin-top: 1rem;">
+              <p><strong>Generated Member Link:</strong></p>
+              <a :href="generatedMemberLink" target="_blank">{{ generatedMemberLink }}</a>
+            </div>
+          </div>
+
+          <!-- Lista de miembros -->
+          <div class="users-list" style="margin-top: 1.5rem;">
             <div v-if="isLoadingUsers" style="color: gray;">Loading members...</div>
             <div v-else-if="associatedUsers.length === 0" class="empty-members">
               No users found for this organization.
@@ -130,7 +165,9 @@ import { useRoute, useRouter } from 'vue-router';
 import { useContractsStore } from '@/modules/contracts/application/useContractsStore';
 import { useProfileStore } from '@/modules/profiles/application/useProfileStore';
 import GtxButton from '@/shared/ui/GtxButton.vue';
+import { useInviteStore } from '@/modules/profiles/application/useInviteStore';
 
+const inviteStore = useInviteStore();
 const route = useRoute();
 const router = useRouter();
 const contractsStore = useContractsStore();
@@ -140,6 +177,26 @@ const association = computed(() => contractsStore.currentAssociation);
 const associatedUsers = ref([]);
 const isLoadingUsers = ref(false);
 const generatedContractLink = ref('');
+const generatedMemberLink = ref('');
+const inviteForm = ref({ email: '', roleId: 4 });
+
+const handleCreateInvite = async () => {
+  if (!inviteForm.value.email) {
+    inviteStore.errorMessage = 'Email is required.';
+    return;
+  }
+  try {
+    const result = await inviteStore.createInvite(
+      Number(route.params.id),
+      inviteForm.value.email,
+      inviteForm.value.roleId
+    );
+    generatedMemberLink.value = `${window.location.origin}/register?email=${inviteForm.value.email}&token=${result.token}`;
+    inviteForm.value.email = '';
+  } catch {
+    // el error ya está en inviteStore.errorMessage
+  }
+};
 
 const contractForm = ref({
   startDate: '', endDate: '', status: 'Active',
