@@ -14,6 +14,7 @@ export const useDeviceStore = defineStore('devices', {
   state: () => ({
     devicesList: [],
     associationsForFilter: [],
+    hasLoaded: false,
     currentDevice: null,
     currentLogs: [],
     logsError: null,
@@ -118,6 +119,7 @@ export const useDeviceStore = defineStore('devices', {
         console.error('[fetchDevices]', error);
       } finally {
         this.isLoading = false;
+        this.hasLoaded = true;
       }
     },
 

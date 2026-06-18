@@ -56,7 +56,10 @@
             <span v-if="mcuLimitLabel"> ({{ mcuLimitLabel }})</span>
           </p>
 
-          <div v-if="isLoadingDevices" class="empty-msg">Loading devices...</div>
+          <div v-if="isLoadingDevices" class="devices-loading">
+            <div class="spinner"></div>
+            <p>Loading devices...</p>
+          </div>
           <div v-else-if="devices.length === 0" class="empty-msg">
             No microcontrollers in this zone yet.
           </div>
@@ -83,7 +86,7 @@
 
           <div v-else class="add-device-section">
             <h4 class="admin-title">Register new microcontroller</h4>
-            <div class="form-grid">
+            <div class="form-grid register-form-grid">
               <div class="form-group">
                 <label>Model</label>
                 <input type="text" class="dark-input" v-model="newDevice.model" placeholder="ESP32" />
@@ -94,9 +97,11 @@
               </div>
             </div>
             <p v-if="deviceError" class="error-text">{{ deviceError }}</p>
-            <GtxButton :disabled="isCreatingDevice" @click="registerDevice">
-              {{ isCreatingDevice ? 'REGISTERING...' : 'REGISTER MCU IN ZONE' }}
-            </GtxButton>
+            <div class="form-actions">
+              <GtxButton :disabled="isCreatingDevice" @click="registerDevice">
+                {{ isCreatingDevice ? 'REGISTERING...' : 'REGISTER MCU IN ZONE' }}
+              </GtxButton>
+            </div>
 
             <div v-if="unassignedDevices.length" class="assign-block">
               <h4 class="admin-title">Or assign existing unassigned device</h4>
@@ -107,6 +112,8 @@
                     #{{ d.id }} · {{ d.model }} · {{ d.macAddress }}
                   </option>
                 </select>
+              </div>
+              <div class="form-actions">
                 <GtxButton :disabled="!assignDeviceId || isLinking" @click="linkExistingDevice">
                   {{ isLinking ? 'LINKING...' : 'ASSIGN TO ZONE' }}
                 </GtxButton>
@@ -471,11 +478,35 @@ const linkExistingDevice = async () => {
 .device-meta { color: #9ca3af; margin: 0; font-size: 0.85rem; }
 .arrow { color: #60a5fa; font-size: 1.1rem; }
 
-.admin-title { color: #e5e7eb; font-size: 0.95rem; margin: 1.5rem 0 0.75rem; }
-.add-device-section { margin-top: 0.5rem; }
-.assign-block { margin-top: 1.5rem; }
-.assign-row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+.admin-title { color: #e5e7eb; font-size: 0.95rem; margin: 0 0 1rem; }
+.add-device-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #374151;
+}
+.register-form-grid { margin-bottom: 0.25rem; }
+.form-actions { margin-top: 1.25rem; }
+.assign-block { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px dashed #374151; }
+.assign-row { display: flex; flex-wrap: wrap; align-items: center; }
 .assign-row .dark-input { flex: 1; min-width: 200px; }
+
+.devices-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 0 2rem;
+  color: #9ca3af;
+}
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #374151;
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .status-online { color: #4ade80; }
 .status-offline { color: #f87171; }

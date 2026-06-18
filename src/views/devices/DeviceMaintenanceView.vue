@@ -51,7 +51,10 @@
       </transition>
     </header>
 
-    <div v-if="deviceStore.isLoading" class="loading-state"><div class="spinner"></div></div>
+    <div v-if="isPageLoading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading devices...</p>
+    </div>
     <div v-else-if="deviceStore.errorMessage" class="error-state">{{ deviceStore.errorMessage }}</div>
 
     <div v-else class="devices-grid">
@@ -154,6 +157,10 @@ const showFilters = ref(false);
 const searchQuery = ref('');
 const statusFilter = ref('ALL');
 const associationFilter = ref('ALL');
+
+const isPageLoading = computed(
+  () => deviceStore.isLoading || !deviceStore.hasLoaded,
+);
 
 // Estados del Modal
 const showModal = ref(false);
@@ -414,6 +421,7 @@ const formatDate = (dateString) => {
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
 .loading-state, .error-state, .empty-msg { text-align: center; padding: 5rem; color: #a0aec0; font-weight: 600;}
+.loading-state p { margin: 1rem 0 0; font-size: 0.95rem; }
 .spinner { width: 50px; height: 50px; border: 5px solid #1f2937; border-top-color: #10b981; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;}
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>
