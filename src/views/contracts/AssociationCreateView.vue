@@ -6,19 +6,50 @@
 
     <div class="form-card">
       <h2 class="form-title">Register Organization</h2>
+      <p class="form-hint">
+        Each association gets exactly one farm, created automatically with the same name.
+      </p>
 
       <div class="form-group">
         <label>Association Name</label>
-        <input type="text" class="dark-input" v-model="form.name" placeholder="Ej: Asociación del Norte" />
+        <input
+          type="text"
+          class="dark-input"
+          v-model="form.name"
+          placeholder="Ej: Asociación del Norte"
+        />
       </div>
 
       <div class="form-group">
         <label>Contact Email</label>
-        <input type="email" class="dark-input" v-model="form.email" placeholder="contacto@asociacion.com" />
+        <input
+          type="email"
+          class="dark-input"
+          v-model="form.email"
+          placeholder="contacto@asociacion.com"
+        />
       </div>
 
+      <div class="form-group">
+        <label>Farm Location</label>
+        <input
+          type="text"
+          class="dark-input"
+          v-model="form.location"
+          placeholder="Ej: Cajamarca, Perú"
+        />
+      </div>
+
+      <p v-if="contractsStore.error" class="error-text">{{ contractsStore.error }}</p>
+
       <div class="actions">
-        <GtxButton variant="primary" @click="handleCreate">CREATE ASSOCIATION</GtxButton>
+        <GtxButton
+          variant="primary"
+          :disabled="contractsStore.isSaving"
+          @click="handleCreate"
+        >
+          {{ contractsStore.isSaving ? 'CREATING...' : 'CREATE ASSOCIATION & FARM' }}
+        </GtxButton>
       </div>
     </div>
   </div>
@@ -33,19 +64,24 @@ import GtxButton from '@/shared/ui/GtxButton.vue';
 const router = useRouter();
 const contractsStore = useContractsStore();
 
-const form = ref({ name: '', email: '' });
+const form = ref({ name: '', email: '', location: '' });
 
 const handleCreate = async () => {
-  if (!form.value.name || !form.value.email) {
-    alert('Todos los campos son obligatorios');
+  const name = form.value.name.trim();
+  const email = form.value.email.trim();
+  const location = form.value.location.trim();
+
+  if (!name || !email || !location) {
+    alert('Name, email and location are required.');
     return;
   }
+
   try {
-    await contractsStore.addAssociation(form.value);
-    alert('Asociación creada. Ahora podrás crearle un contrato o usuarios.');
+    await contractsStore.addAssociation({ name, email, location });
+    alert('Association and farm created successfully.');
     router.push('/contracts');
   } catch {
-    alert('Hubo un error al crear la asociación.');
+    alert(contractsStore.error || 'Failed to create association and farm.');
   }
 };
 </script>
@@ -71,7 +107,9 @@ const handleCreate = async () => {
   margin: 0;
 }
 
-.back-header:hover { opacity: 0.8; }
+.back-header:hover {
+  opacity: 0.8;
+}
 
 .form-card {
   background-color: #161819;
@@ -81,11 +119,20 @@ const handleCreate = async () => {
 
 .form-title {
   color: white;
-  margin-bottom: 2rem;
+  margin-bottom: 0.75rem;
   font-size: 1.5rem;
 }
 
-.form-group { margin-bottom: 1.5rem; }
+.form-hint {
+  color: #9ca3af;
+  margin: 0 0 2rem;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
 
 .form-group label {
   display: block;
@@ -107,15 +154,17 @@ const handleCreate = async () => {
   font-size: 1rem;
 }
 
+.error-text {
+  color: #ff5757;
+  margin-bottom: 1rem;
+}
+
 .actions {
   margin-top: 2rem;
   display: flex;
   justify-content: flex-end;
 }
 
-/* ============================================================
-   MÓVIL (≤ 768px)
-   ============================================================ */
 @media (max-width: 768px) {
   .page-container {
     max-width: 100%;
@@ -129,7 +178,6 @@ const handleCreate = async () => {
     padding: 1.5rem;
   }
 
-  /* Botón ocupa todo el ancho en móvil */
   .actions {
     justify-content: stretch;
   }
@@ -139,9 +187,6 @@ const handleCreate = async () => {
   }
 }
 
-/* ============================================================
-   MÓVIL PEQUEÑO (≤ 480px)
-   ============================================================ */
 @media (max-width: 480px) {
   .back-header h1 {
     font-size: 1.25rem;

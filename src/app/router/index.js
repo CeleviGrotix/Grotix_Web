@@ -94,6 +94,12 @@ const router = createRouter({
           component: ContractDetailView,
           meta: { title: 'Association Details | Grotix' }
         },
+        {
+          path: 'contracts/:id/zones/:zoneId',
+          name: 'zone-detail',
+          component: () => import('@/views/contracts/ZoneDetailView.vue'),
+          meta: { title: 'Zone Hardware | Grotix' }
+        },
         // --- RUTAS NUEVAS DE DISPOSITIVOS ---
         {
           path: 'devices',
@@ -114,9 +120,9 @@ const router = createRouter({
           meta: { title: 'Maintenance | Grotix' }
         },
         {
-          path: 'devices/:id',
+          path: 'devices/:deviceId',
           name: 'device-detail',
-          component: () => import('@/views/devices/DeviceDetailView.vue'), // Detalle
+          component: () => import('@/views/devices/DeviceDetailView.vue'),
           meta: { title: 'Device Detail | Grotix' }
         }
       ]
@@ -137,7 +143,7 @@ const router = createRouter({
 })
 
 // Actualizar el título de la pestaña del navegador dinámicamente
-router.beforeEach((to, from, next) => {
+router.beforeEach((to) => {
   document.title = to.meta.title || 'Grotix Web';
 
   const publicRoutes = ['login', 'register'];
@@ -145,14 +151,14 @@ router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('grotix_token');
 
   if (!isPublic && !token) {
-    return next({ name: 'login' }); 
-  } 
-  
+    return { name: 'login' };
+  }
+
   if (isPublic && token) {
-    return next({ name: 'dashboard' });
-  } 
-  
-  return next();
+    return { name: 'dashboard' };
+  }
+
+  return true;
 });
 
 export default router

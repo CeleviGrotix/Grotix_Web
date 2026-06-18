@@ -22,8 +22,18 @@
       <transition name="slide-fade">
         <div v-if="showFilters" class="filters-panel">
           <div class="filter-group">
+            <label>Association</label>
+            <select v-model="associationFilter" class="filter-select">
+              <option value="ALL">All Associations</option>
+              <option value="UNASSIGNED">Unassigned</option>
+              <option v-for="assoc in deviceStore.associationsForFilter" :key="assoc.id" :value="String(assoc.id)">
+                {{ assoc.name }}
+              </option>
+            </select>
+          </div>
+          <div class="filter-group">
             <label>Search Device</label>
-            <input type="text" v-model="searchQuery" placeholder="ID, Model, MAC..." class="filter-input">
+            <input type="text" v-model="searchQuery" placeholder="ID, Model, MAC, Association..." class="filter-input">
           </div>
           <div class="filter-group">
             <label>Connection Status</label>
@@ -34,7 +44,7 @@
               <option value="MAINTENANCE">Maintenance</option>
             </select>
           </div>
-          <button class="btn-clear" @click="clearFilters" v-if="searchQuery || statusFilter !== 'ALL'">
+          <button class="btn-clear" @click="clearFilters" v-if="searchQuery || statusFilter !== 'ALL' || associationFilter !== 'ALL'">
             Clear
           </button>
         </div>
@@ -50,7 +60,7 @@
     </div>
 
     <div v-else class="devices-grid">
-      <div v-for="device in filteredDevices" :key="device.id" class="premium-device-card" @click="goToDetail(device.id)">
+      <div v-for="device in filteredDevices" :key="device.id" class="premium-device-card" @click="goToDetail(device)">
         
         <div class="card-glow"></div>
         
@@ -74,8 +84,12 @@
             <p class="model-text">{{ device.model || 'Standard Microcontroller' }}</p>
           </div>
           <div class="info-row">
-            <label>Zone ID</label>
-            <p class="zone-text">{{ device.zoneId || 'Unassigned' }}</p>
+            <label>Association</label>
+            <p class="association-text">{{ device.associationName || 'Unassigned' }}</p>
+          </div>
+          <div class="info-row">
+            <label>Zone</label>
+            <p class="zone-text">{{ device.zoneName || (device.zoneId ? `Zone #${device.zoneId}` : 'Unassigned') }}</p>
           </div>
           <div class="info-row last-maintenance">
             <label>Last Seen / Sync</label>
@@ -107,6 +121,7 @@ const deviceStore = useDeviceStore();
 const showFilters = ref(false);
 const searchQuery = ref('');
 const statusFilter = ref('ALL');
+const associationFilter = ref('ALL');
 
 onMounted(() => {
   deviceStore.fetchDevices();
@@ -122,13 +137,22 @@ const filteredDevices = computed(() => {
     });
   }
 
+  if (associationFilter.value === 'UNASSIGNED') {
+    list = list.filter(d => !d.zoneId || !d.associationId);
+  } else if (associationFilter.value !== 'ALL') {
+    list = list.filter(d => String(d.associationId) === associationFilter.value);
+  }
+
   if (searchQuery.value.trim() !== '') {
     const query = searchQuery.value.toLowerCase().trim();
     list = list.filter(d => {
       const idMatch = String(d.id).includes(query);
       const modelMatch = d.model && d.model.toLowerCase().includes(query);
       const macMatch = d.macAddress && d.macAddress.toLowerCase().includes(query);
-      return idMatch || modelMatch || macMatch;
+      const associationMatch = d.associationName && d.associationName.toLowerCase().includes(query);
+      const zoneMatch = d.zoneName && d.zoneName.toLowerCase().includes(query);
+      const farmMatch = d.farmName && d.farmName.toLowerCase().includes(query);
+      return idMatch || modelMatch || macMatch || associationMatch || zoneMatch || farmMatch;
     });
   }
 
@@ -142,10 +166,13 @@ const toggleFilters = () => {
 const clearFilters = () => {
   searchQuery.value = '';
   statusFilter.value = 'ALL';
+  associationFilter.value = 'ALL';
 };
 
-const goToDetail = (id) => {
-  router.push(`/devices/${id}`);
+const goToDetail = (device) => {
+  const id = device.deviceId ?? device.id;
+  if (!id) return;
+  router.push({ name: 'device-detail', params: { deviceId: String(id) } });
 };
 
 const getBadgeClass = (status) => {
@@ -379,6 +406,7 @@ const formatDate = (dateString) => {
 .premium-device-card p { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem;} /* Fuente mono para datos técnicos */
 
 .model-text { color: #e2e8f0; font-weight: 600; }
+.association-text { color: #fbbf24; font-weight: 700; }
 .zone-text { color: #3182ce; font-weight: 700; background: rgba(49, 130, 206, 0.1); padding: 2px 6px; border-radius: 4px; }
 
 .last-maintenance {

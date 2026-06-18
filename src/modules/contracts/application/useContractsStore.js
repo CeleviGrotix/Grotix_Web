@@ -1,14 +1,22 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { ContractsApi } from '../infrastructure/ContractsApi';
+import { FarmApi } from '@/modules/farms/infrastructure/FarmApi';
+import { ZoneApi } from '@/modules/farms/infrastructure/ZoneApi';
 import { axiosClient } from '@/shared/http/axiosClient';
 import { Association } from '../domain/Association';
 
 export const useContractsStore = defineStore('contracts', () => {
   const associations = ref([]);
   const currentAssociation = ref(null);
+  const currentFarm = ref(null);
+  const farmZones = ref([]);
   const isLoading = ref(false);
+  const isSaving = ref(false);
+  const isLoadingZones = ref(false);
+  const isSavingZone = ref(false);
   const error = ref(null);
+  const zoneError = ref(null);
 
 async function fetchAssociations() {
   isLoading.value = true;
@@ -39,17 +47,106 @@ async function fetchAssociations() {
   }
 }
 
+  function syncCurrentAssociationFromList(id) {
+    const targetId = id ?? currentAssociation.value?.id;
+    if (!targetId) return;
+    currentAssociation.value =
+      associations.value.find((a) => String(a.id) === String(targetId)) ?? null;
+  }
+
+  async function refreshAssociationById(id) {
+    await fetchAssociations();
+    syncCurrentAssociationFromList(id);
+    return currentAssociation.value;
+  }
+
   // Busca en la memoria local o hace un fetch si recargan la página
   async function loadAssociationById(id) {
     if (associations.value.length === 0) {
       await fetchAssociations();
     }
-    // Buscamos la asociación por ID asegurando que los tipos coincidan (Number vs String)
-    currentAssociation.value = associations.value.find(a => String(a.id) === String(id));
+    syncCurrentAssociationFromList(id);
   }
 
-  async function addAssociation(data) {
-    await ContractsApi.createAssociation(data);
+  async function loadZonesForFarm(farmId) {
+    if (!farmId) {
+      farmZones.value = [];
+      return [];
+    }
+
+    isLoadingZones.value = true;
+    zoneError.value = null;
+    try {
+      farmZones.value = await ZoneApi.listByFarm(farmId);
+      return farmZones.value;
+    } catch (err) {
+      console.error(err);
+      zoneError.value = err.response?.data?.message || 'Error loading zones.';
+      farmZones.value = [];
+      return [];
+    } finally {
+      isLoadingZones.value = false;
+    }
+  }
+
+  async function addZone(farmId, payload) {
+    isSavingZone.value = true;
+    zoneError.value = null;
+    try {
+      const zone = await ZoneApi.createZone(farmId, payload);
+      await loadZonesForFarm(farmId);
+      return zone;
+    } catch (err) {
+      console.error(err);
+      const message = err.response?.data?.message || 'Error creating zone.';
+      zoneError.value = message;
+      throw new Error(message);
+    } finally {
+      isSavingZone.value = false;
+    }
+  }
+
+  async function loadFarmForAssociation(associationId) {
+    const farms = await FarmApi.getByAssociationId(associationId);
+    currentFarm.value = farms[0] ?? null;
+    return currentFarm.value;
+  }
+
+  async function addAssociation({ name, email, location }) {
+    isSaving.value = true;
+    error.value = null;
+    try {
+      const assoc = await ContractsApi.createAssociation({ name, email });
+      const associationId = assoc.id;
+
+      if (!associationId) {
+        throw new Error('Association was created but no id was returned.');
+      }
+
+      const existingFarms = await FarmApi.getByAssociationId(associationId);
+      if (existingFarms.length > 0) {
+        throw new Error('This association already has a farm.');
+      }
+
+      await FarmApi.createFarm({
+        associationId,
+        name,
+        location,
+      });
+
+      await fetchAssociations();
+      return assoc;
+    } catch (err) {
+      console.error(err);
+      const message =
+        err.response?.data?.message ||
+        err.message ||
+        'Error creating association or farm.';
+      error.value = message;
+      throw new Error(message);
+    } finally {
+      isSaving.value = false;
+    }
   }
 
   async function addContract(contractData) {
@@ -61,12 +158,9 @@ async function fetchAssociations() {
   async function updateContract(contractId, contractData) {
     try {
       const response = await axiosClient.patch(`/api/v1/contracts/${contractId}`, contractData);
-      
-      // Actualizamos el contrato en la memoria local para que la UI reaccione
-      if (currentAssociation.value && currentAssociation.value.contractStart) {
-        currentAssociation.value.contractEnd = response.data.endDate;
-      }
-      await fetchAssociations(); // Refrescamos la lista principal
+      const associationId = currentAssociation.value?.id;
+      await fetchAssociations();
+      syncCurrentAssociationFromList(associationId);
       return response.data;
     } catch (err) {
       console.error("Error al actualizar el contrato:", err);
@@ -78,18 +172,9 @@ async function fetchAssociations() {
   async function deleteContract(contractId) {
     try {
       await axiosClient.delete(`/api/v1/contracts/${contractId}`);
-      
-      if (currentAssociation.value) {
-        // ❌ BORRA ESTAS LÍNEAS ❌
-        // currentAssociation.value.hasActiveContract = false; 
-        // currentAssociation.value.contractStart = null;
-        // currentAssociation.value.contractEnd = null;
-
-        // ✅ AGREGA ESTAS ✅
-        currentAssociation.value.status = 'Canceled';
-        currentAssociation.value.isSuspended = true;
-      }
-      await fetchAssociations(); 
+      const associationId = currentAssociation.value?.id;
+      await fetchAssociations();
+      syncCurrentAssociationFromList(associationId);
     } catch (err) {
       console.error("Error al eliminar el contrato:", err);
       throw err;
@@ -106,9 +191,27 @@ async function fetchAssociations() {
   }
   }
 
-  return { 
-    associations, currentAssociation, isLoading, error, 
-    fetchAssociations, loadAssociationById, addAssociation, 
-    addContract, inviteUser, updateContract, deleteContract
+  return {
+    associations,
+    currentAssociation,
+    currentFarm,
+    farmZones,
+    isLoading,
+    isSaving,
+    isLoadingZones,
+    isSavingZone,
+    error,
+    zoneError,
+    fetchAssociations,
+    loadAssociationById,
+    refreshAssociationById,
+    loadFarmForAssociation,
+    loadZonesForFarm,
+    addZone,
+    addAssociation,
+    addContract,
+    inviteUser,
+    updateContract,
+    deleteContract,
   };
 });

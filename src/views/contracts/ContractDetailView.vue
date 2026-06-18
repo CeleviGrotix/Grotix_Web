@@ -15,90 +15,185 @@
         </div>
       </div>
 
+      <div v-if="isLoadingFarm" class="farm-banner">Loading farm...</div>
+      <div v-else-if="farm" class="farm-banner">
+        <div>
+          <span class="farm-label">Registered Farm</span>
+          <h3 class="farm-name">{{ farm.name }}</h3>
+          <p class="farm-location">{{ farm.location }}</p>
+        </div>
+      </div>
+      <div v-else class="farm-banner farm-missing">
+        <p>No farm found for this association.</p>
+      </div>
+
       <div class="dashboard-grid">
 
-        <!-- CARD 1: Contract -->
-        <div class="form-card">
-          <h3 class="section-title">
-            {{ association.hasActiveContract ? '1. Edit Contract' : '1. Generate Contract' }}
-          </h3>
-          <p class="subtitle">
-            {{ association.hasActiveContract
-              ? 'Update current terms or terminate the service.'
-              : 'Assign a contract to this association (1-to-1)' }}
-          </p>
+        <div class="dashboard-column">
+          <!-- Contract -->
+          <div class="form-card">
+            <h3 class="section-title">
+              {{ association.hasActiveContract ? '1. Edit Contract' : '1. Generate Contract' }}
+            </h3>
+            <p class="subtitle">
+              {{ association.hasActiveContract
+                ? 'Update current terms or terminate the service.'
+                : 'Assign a contract to this association (1-to-1)' }}
+            </p>
 
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Start Date</label>
-              <input type="datetime-local" class="dark-input" v-model="contractForm.startDate" :disabled="association.hasActiveContract" />
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Start Date</label>
+                <input type="datetime-local" class="dark-input" v-model="contractForm.startDate" :disabled="association.hasActiveContract" />
+              </div>
+              <div class="form-group">
+                <label>End Date</label>
+                <input type="datetime-local" class="dark-input" v-model="contractForm.endDate" />
+              </div>
+              <div class="form-group">
+                <label>Total Amount (USD)</label>
+                <input type="number" class="dark-input" v-model="contractForm.totalAmount" />
+              </div>
+              <div class="form-group">
+                <label>Payment Freq.</label>
+                <select class="dark-input" v-model="contractForm.paymentFrequency">
+                  <option value="Monthly">Monthly</option>
+                  <option value="Quarterly">Quarterly</option>
+                  <option value="SemiAnnual">SemiAnnual</option>
+                  <option value="Annual">Annual</option>
+                  <option value="OneTime">OneTime</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Max Zones</label>
+                <input type="number" class="dark-input" v-model="contractForm.maxZones" />
+              </div>
+              <div class="form-group">
+                <label>Max Microcontrollers</label>
+                <input type="number" class="dark-input" v-model="contractForm.maxMicrocontrollers" />
+              </div>
             </div>
-            <div class="form-group">
-              <label>End Date</label>
-              <input type="datetime-local" class="dark-input" v-model="contractForm.endDate" />
+
+            <div v-if="!association.hasActiveContract">
+              <h4 class="admin-title">Org Admin Account</h4>
+              <p class="admin-subtitle">A register invitation will be sent to this email</p>
+              <div class="form-group">
+                <input type="email" class="dark-input" placeholder="admin@organizacion.com" v-model="contractForm.orgAdminEmail" />
+              </div>
             </div>
-            <div class="form-group">
-              <label>Total Amount (USD)</label>
-              <input type="number" class="dark-input" v-model="contractForm.totalAmount" />
+
+            <div class="action-buttons">
+              <GtxButton
+                variant="primary"
+                style="width: 100%;"
+                :style="isCanceled ? 'background-color: #4FD16C; color: #1a1a1a;' : ''"
+                @click="handleContractAction"
+              >
+                {{ isCanceled ? 'REACTIVATE CONTRACT' : association.hasActiveContract ? 'UPDATE CONTRACT' : 'SAVE CONTRACT' }}
+              </GtxButton>
+
+              <GtxButton
+                v-if="association.hasActiveContract && !isCanceled"
+                style="width: 100%; background-color: #FF5757; color: white;"
+                @click="handleDelete"
+              >
+                TERMINATE CONTRACT
+              </GtxButton>
             </div>
-            <div class="form-group">
-              <label>Payment Freq.</label>
-              <select class="dark-input" v-model="contractForm.paymentFrequency">
-                <option value="Monthly">Monthly</option>
-                <option value="Quarterly">Quarterly</option>
-                <option value="SemiAnnual">SemiAnnual</option>
-                <option value="Annual">Annual</option>
-                <option value="OneTime">OneTime</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Max Zones</label>
-              <input type="number" class="dark-input" v-model="contractForm.maxZones" />
-            </div>
-            <div class="form-group">
-              <label>Max Microcontrollers</label>
-              <input type="number" class="dark-input" v-model="contractForm.maxMicrocontrollers" />
+
+            <div v-if="generatedContractLink" class="magic-link-box">
+              <p><strong>Generated Admin Link:</strong></p>
+              <a :href="generatedContractLink" target="_blank">{{ generatedContractLink }}</a>
             </div>
           </div>
 
-          <div v-if="!association.hasActiveContract">
-            <h4 class="admin-title">Org Admin Account</h4>
-            <p class="admin-subtitle">A register invitation will be sent to this email</p>
-            <div class="form-group">
-              <input type="email" class="dark-input" placeholder="admin@organizacion.com" v-model="contractForm.orgAdminEmail" />
+          <!-- Zones -->
+          <div v-if="farm" class="form-card zones-section">
+            <h3 class="section-title">2. Cultivation Zones</h3>
+            <p class="subtitle">
+              Zones belong to this association's farm.
+              <span v-if="zoneLimitLabel"> ({{ zoneLimitLabel }})</span>
+            </p>
+
+            <div v-if="isLoadingZones" class="empty-zones">Loading zones...</div>
+            <div v-else-if="farmZones.length === 0" class="empty-zones">
+              No zones registered yet.
             </div>
-          </div>
+            <div v-else class="zones-list">
+              <div
+                v-for="zone in farmZones"
+                :key="zone.id"
+                class="zone-item zone-item-clickable"
+                @click="goToZone(zone.id)"
+              >
+                <div>
+                  <p class="zone-name">{{ zone.name }}</p>
+                  <p class="zone-meta">
+                    Crop: {{ cropLabel(zone.cropId) }} · {{ zone.irrigationMode || 'AUTOMATIC' }}
+                  </p>
+                  <p class="zone-coords">{{ zone.latitude }}, {{ zone.longitude }}</p>
+                </div>
+                <span class="zone-id">#{{ zone.id }} →</span>
+              </div>
+            </div>
 
-          <div class="action-buttons">
-            <GtxButton
-              variant="primary"
-              style="width: 100%;"
-              :style="isCanceled ? 'background-color: #4FD16C; color: #1a1a1a;' : ''"
-              @click="handleContractAction"
-            >
-              {{ isCanceled ? 'REACTIVATE CONTRACT' : association.hasActiveContract ? 'UPDATE CONTRACT' : 'SAVE CONTRACT' }}
-            </GtxButton>
+            <div v-if="!canAddZone" class="zone-limit-msg">
+              {{ zoneLimitMessage }}
+            </div>
 
-            <GtxButton
-              v-if="association.hasActiveContract && !isCanceled"
-              style="width: 100%; background-color: #FF5757; color: white;"
-              @click="handleDelete"
-            >
-              TERMINATE CONTRACT
-            </GtxButton>
-          </div>
+            <div v-else class="zone-form">
+              <h4 class="admin-title">Add Zone</h4>
 
-          <div v-if="generatedContractLink" class="magic-link-box">
-            <p><strong>Generated Admin Link:</strong></p>
-            <a :href="generatedContractLink" target="_blank">{{ generatedContractLink }}</a>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Zone Name</label>
+                  <input type="text" class="dark-input" v-model="zoneForm.name" placeholder="Ej: Invernadero A" />
+                </div>
+                <div class="form-group">
+                  <label>Crop</label>
+                  <select class="dark-input" v-model.number="zoneForm.cropId">
+                    <option :value="0" disabled>Select crop</option>
+                    <option v-for="crop in crops" :key="crop.id" :value="crop.id">
+                      {{ crop.commonName }}
+                    </option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Latitude</label>
+                  <input type="number" step="any" class="dark-input" v-model.number="zoneForm.latitude" />
+                </div>
+                <div class="form-group">
+                  <label>Longitude</label>
+                  <input type="number" step="any" class="dark-input" v-model.number="zoneForm.longitude" />
+                </div>
+                <div class="form-group">
+                  <label>Irrigation Mode</label>
+                  <select class="dark-input" v-model="zoneForm.irrigationMode">
+                    <option value="AUTOMATIC">Automatic</option>
+                    <option value="MANUAL">Manual</option>
+                  </select>
+                </div>
+              </div>
+
+              <p v-if="contractsStore.zoneError" class="error-text">{{ contractsStore.zoneError }}</p>
+
+              <GtxButton
+                variant="primary"
+                style="width: 100%; margin-top: 0.5rem;"
+                :disabled="contractsStore.isSavingZone"
+                @click="handleCreateZone"
+              >
+                {{ contractsStore.isSavingZone ? 'CREATING...' : 'ADD ZONE' }}
+              </GtxButton>
+            </div>
           </div>
         </div>
-        <!-- CARD 2: Members -->
-        <div class="form-card">
-          <h3 class="section-title">2. Active Members</h3>
+
+        <!-- Members -->
+        <div class="form-card members-column">
+          <h3 class="section-title">3. Active Members</h3>
           <p class="subtitle">Users currently registered under this association.</p>
 
-          <!-- Formulario de invitación -->
           <div class="invite-section">
             <h4 class="admin-title">Invite Member</h4>
             <p class="admin-subtitle">Generate a registration link for a new member.</p>
@@ -133,8 +228,7 @@
             </div>
           </div>
 
-          <!-- Lista de miembros -->
-          <div class="users-list" style="margin-top: 1.5rem;">
+          <div class="users-list">
             <div v-if="isLoadingUsers" style="color: gray;">Loading members...</div>
             <div v-else-if="associatedUsers.length === 0" class="empty-members">
               No users found for this organization.
@@ -164,6 +258,7 @@ import { onMounted, computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useContractsStore } from '@/modules/contracts/application/useContractsStore';
 import { useProfileStore } from '@/modules/profiles/application/useProfileStore';
+import { CatalogApi } from '@/modules/catalog/infrastructure/CatalogApi';
 import GtxButton from '@/shared/ui/GtxButton.vue';
 import { useInviteStore } from '@/modules/profiles/application/useInviteStore';
 
@@ -174,6 +269,76 @@ const contractsStore = useContractsStore();
 const profileStore = useProfileStore();
 
 const association = computed(() => contractsStore.currentAssociation);
+const farm = computed(() => contractsStore.currentFarm);
+const farmZones = computed(() => contractsStore.farmZones);
+const isLoadingFarm = ref(false);
+const isLoadingZones = computed(() => contractsStore.isLoadingZones);
+const crops = ref([]);
+
+const zoneForm = ref({
+  name: '',
+  cropId: 0,
+  latitude: -12.0464,
+  longitude: -77.0428,
+  irrigationMode: 'AUTOMATIC',
+});
+
+const maxZonesAllowed = computed(() => {
+  if (!association.value?.hasActiveContract) return null;
+  return Number(association.value.maxZones) || 0;
+});
+
+const canAddZone = computed(() => {
+  if (!farm.value) return false;
+  if (maxZonesAllowed.value == null) return true;
+  return farmZones.value.length < maxZonesAllowed.value;
+});
+
+const zoneLimitLabel = computed(() => {
+  if (maxZonesAllowed.value == null) return null;
+  return `${farmZones.value.length} / ${maxZonesAllowed.value} zones`;
+});
+
+const zoneLimitMessage = computed(() => {
+  if (!farm.value) return 'Register a farm before adding zones.';
+  if (maxZonesAllowed.value == null) return 'Cannot add zones without a farm.';
+  if (farmZones.value.length >= maxZonesAllowed.value) {
+    return `Zone limit reached (${maxZonesAllowed.value}). Update the contract to allow more.`;
+  }
+  return '';
+});
+
+const cropLabel = (cropId) => {
+  const crop = crops.value.find((c) => String(c.id) === String(cropId));
+  return crop?.commonName || `Crop #${cropId}`;
+};
+
+const goToZone = (zoneId) => {
+  router.push({ name: 'zone-detail', params: { id: route.params.id, zoneId } });
+};
+
+const handleCreateZone = async () => {
+  const name = zoneForm.value.name.trim();
+  if (!name || !zoneForm.value.cropId) {
+    alert('Zone name and crop are required.');
+    return;
+  }
+
+  try {
+    await contractsStore.addZone(farm.value.id, {
+      name,
+      cropId: zoneForm.value.cropId,
+      latitude: zoneForm.value.latitude,
+      longitude: zoneForm.value.longitude,
+      irrigationMode: zoneForm.value.irrigationMode,
+    });
+    zoneForm.value.name = '';
+    zoneForm.value.cropId = 0;
+    alert('Zone created successfully.');
+  } catch {
+    alert(contractsStore.zoneError || 'Failed to create zone.');
+  }
+};
 const associatedUsers = ref([]);
 const isLoadingUsers = ref(false);
 const generatedContractLink = ref('');
@@ -244,6 +409,15 @@ const fetchAssociatedUsers = async (id) => {
 
 const goToUserProfile = (userId) => router.push(`/profiles/${userId}`);
 
+const reloadAssociationState = async () => {
+  const id = route.params.id;
+  await contractsStore.refreshAssociationById(id);
+  syncFormWithContract();
+  if (contractsStore.currentFarm?.id) {
+    await contractsStore.loadZonesForFarm(contractsStore.currentFarm.id);
+  }
+};
+
 const handleContractAction = async () => {
   if (association.value.hasActiveContract) {
     try {
@@ -257,9 +431,8 @@ const handleContractAction = async () => {
         isSuspended: isCanceled.value ? false : contractForm.value.isSuspended,
       };
       await contractsStore.updateContract(association.value.contractId, payload);
+      await reloadAssociationState();
       alert(isCanceled.value ? 'Contract reactivated!' : 'Contract updated!');
-      association.value.status = payload.status;
-      association.value.isSuspended = payload.isSuspended;
     } catch { alert('Action failed.'); }
   } else {
     await handleCreateContract();
@@ -270,11 +443,8 @@ const handleDelete = async () => {
   if (!confirm('Are you sure you want to TERMINATE this contract?')) return;
   try {
     await contractsStore.deleteContract(association.value.contractId);
+    await reloadAssociationState();
     alert('Contract has been deactivated and suspended.');
-    contractForm.value.isSuspended = true;
-    contractForm.value.status = 'Canceled';
-    association.value.status = 'Canceled';
-    association.value.isSuspended = true;
   } catch { alert('Error deactivating contract.'); }
 };
 
@@ -285,6 +455,7 @@ const handleCreateContract = async () => {
     if (payload.startDate) payload.startDate = new Date(payload.startDate).toISOString();
     if (payload.endDate) payload.endDate = new Date(payload.endDate).toISOString();
     const response = await contractsStore.addContract(payload);
+    await reloadAssociationState();
     const token = response.orgAdminInviteToken;
     generatedContractLink.value = `${window.location.origin}/register?email=${payload.orgAdminEmail}&token=${token}`;
     alert('Contract created! Copy the link generated below.');
@@ -296,6 +467,22 @@ onMounted(async () => {
   await contractsStore.loadAssociationById(id);
   syncFormWithContract();
   fetchAssociatedUsers(id);
+
+  try {
+    crops.value = await CatalogApi.getCrops();
+  } catch (err) {
+    console.error('Failed to load crops', err);
+  }
+
+  isLoadingFarm.value = true;
+  try {
+    const loadedFarm = await contractsStore.loadFarmForAssociation(id);
+    if (loadedFarm?.id) {
+      await contractsStore.loadZonesForFarm(loadedFarm.id);
+    }
+  } finally {
+    isLoadingFarm.value = false;
+  }
 });
 </script>
 
@@ -318,6 +505,107 @@ onMounted(async () => {
   margin: 0;
 }
 .back-header:hover { opacity: 0.8; }
+
+.farm-banner {
+  background-color: #161819;
+  border: 1px solid #2a2e30;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.farm-banner.farm-missing {
+  color: #9ca3af;
+}
+
+.farm-label {
+  display: block;
+  color: var(--emerald-green);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.farm-name {
+  color: white;
+  margin: 0 0 0.25rem;
+  font-size: 1.15rem;
+}
+
+.farm-location {
+  color: #9ca3af;
+  margin: 0;
+}
+
+.zones-section {
+  margin-top: 0;
+}
+
+.dashboard-column {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.members-column .users-list {
+  margin-top: 1.5rem;
+}
+
+.zones-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.zone-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  background-color: #1f2325;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+}
+
+.zone-item-clickable {
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.zone-item-clickable:hover {
+  background-color: #2a2f32;
+}
+
+.zone-name {
+  color: white;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+
+.zone-meta,
+.zone-coords {
+  color: #9ca3af;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.zone-id {
+  color: var(--emerald-green);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.empty-zones,
+.zone-limit-msg {
+  color: #9ca3af;
+  margin-bottom: 1rem;
+}
+
+.zone-form {
+  border-top: 1px solid #2a2e30;
+  padding-top: 1.25rem;
+}
 
 /* --- HEADER CARD --- */
 .header-card {
@@ -482,6 +770,10 @@ onMounted(async () => {
 
   .dashboard-grid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .dashboard-column {
     gap: 1.5rem;
   }
 

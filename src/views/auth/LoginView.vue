@@ -15,6 +15,7 @@
           <label>Password</label>
           <input type="password" class="dark-input" v-model="form.password" required placeholder="••••••••" />
         </div>
+        <p v-if="sessionExpiredMessage" class="session-expired-text">{{ sessionExpiredMessage }}</p>
         <p v-if="errorMessage" class="error-text">{{ errorMessage }}</p>
         <GtxButton variant="primary" style="width: 100%; margin-top: 1.5rem;" type="submit">
           {{ authStore.isLoading ? 'LOADING...' : 'LOGIN' }}
@@ -25,14 +26,21 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/modules/auth/application/useAuthStore';
 import GtxButton from '@/shared/ui/GtxButton.vue';
 
 const router = useRouter();
+const route = useRoute();
 const authStore = useAuthStore();
 const errorMessage = ref('');
+
+const sessionExpiredMessage = computed(() =>
+  route.query.sessionExpired === '1'
+    ? 'Your session expired. Please sign in again.'
+    : '',
+);
 
 
 const form = ref({ email: '', password: '' });
@@ -70,6 +78,13 @@ const handleLogin = async () => {
 
 .error-text {
   color: #FF5757;
+  font-size: 0.85rem;
+  margin-top: 1rem;
+  text-align: left;
+}
+
+.session-expired-text {
+  color: #fbbf24;
   font-size: 0.85rem;
   margin-top: 1rem;
   text-align: left;

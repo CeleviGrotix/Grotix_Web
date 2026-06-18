@@ -11,14 +11,51 @@
         <button @click="$router.push('/devices')">LIST</button>
         <button @click="$router.push('/devices/logbook')">LOGBOOK</button>
         <button class="active">MAINTENANCE</button>
+
+        <div class="icon-right" @click="toggleFilters" :class="{ 'icon-active': showFilters }">
+          <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+          </svg>
+        </div>
       </div>
+
+      <transition name="slide-fade">
+        <div v-if="showFilters" class="filters-panel">
+          <div class="filter-group">
+            <label>Association</label>
+            <select v-model="associationFilter" class="filter-select">
+              <option value="ALL">All Associations</option>
+              <option value="UNASSIGNED">Unassigned</option>
+              <option v-for="assoc in deviceStore.associationsForFilter" :key="assoc.id" :value="String(assoc.id)">
+                {{ assoc.name }}
+              </option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Search Device</label>
+            <input type="text" v-model="searchQuery" placeholder="ID, Model, Association..." class="filter-input">
+          </div>
+          <div class="filter-group">
+            <label>Connection Status</label>
+            <select v-model="statusFilter" class="filter-select">
+              <option value="ALL">All Statuses</option>
+              <option value="ONLINE">Online</option>
+              <option value="OFFLINE">Offline</option>
+              <option value="MAINTENANCE">Maintenance</option>
+            </select>
+          </div>
+          <button class="btn-clear" @click="clearFilters" v-if="searchQuery || statusFilter !== 'ALL' || associationFilter !== 'ALL'">
+            Clear
+          </button>
+        </div>
+      </transition>
     </header>
 
     <div v-if="deviceStore.isLoading" class="loading-state"><div class="spinner"></div></div>
     <div v-else-if="deviceStore.errorMessage" class="error-state">{{ deviceStore.errorMessage }}</div>
 
     <div v-else class="devices-grid">
-      <div v-for="device in deviceStore.devicesList" :key="device.id" class="premium-device-card">
+      <div v-for="device in filteredDevices" :key="device.id" class="premium-device-card">
         
         <div class="card-header-premium">
           <div class="identity">
@@ -38,6 +75,14 @@
           <div class="info-row">
             <label>Model</label>
             <p class="model-text">{{ device.model || 'Standard Microcontroller' }}</p>
+          </div>
+          <div class="info-row">
+            <label>Association</label>
+            <p class="association-text">{{ device.associationName || 'Unassigned' }}</p>
+          </div>
+          <div class="info-row">
+            <label>Zone</label>
+            <p class="zone-text">{{ device.zoneName || (device.zoneId ? `Zone #${device.zoneId}` : 'Unassigned') }}</p>
           </div>
           <div class="info-row last-maintenance">
             <label>Last Sync</label>
@@ -61,7 +106,9 @@
         </div>
       </div>
       
-      <p v-if="deviceStore.devicesList.length === 0" class="empty-msg">No devices registered.</p>
+      <p v-if="filteredDevices.length === 0" class="empty-msg">
+        {{ deviceStore.devicesList.length === 0 ? 'No devices registered.' : 'No devices match the current filters.' }}
+      </p>
     </div>
 
     <transition name="fade">
@@ -98,10 +145,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useDeviceStore } from '@/modules/devices/application/useDeviceStore';
 
 const deviceStore = useDeviceStore();
+
+const showFilters = ref(false);
+const searchQuery = ref('');
+const statusFilter = ref('ALL');
+const associationFilter = ref('ALL');
 
 // Estados del Modal
 const showModal = ref(false);
@@ -111,6 +163,47 @@ const actionText = ref('');
 const isProcessing = ref(false);
 
 onMounted(() => { deviceStore.fetchDevices(); });
+
+const filteredDevices = computed(() => {
+  let list = deviceStore.devicesList;
+
+  if (statusFilter.value !== 'ALL') {
+    list = list.filter((d) => {
+      const status = d.status ? d.status.toUpperCase() : '';
+      return status === statusFilter.value;
+    });
+  }
+
+  if (associationFilter.value === 'UNASSIGNED') {
+    list = list.filter((d) => !d.zoneId || !d.associationId);
+  } else if (associationFilter.value !== 'ALL') {
+    list = list.filter((d) => String(d.associationId) === associationFilter.value);
+  }
+
+  if (searchQuery.value.trim() !== '') {
+    const query = searchQuery.value.toLowerCase().trim();
+    list = list.filter((d) => {
+      const idMatch = String(d.id).includes(query);
+      const modelMatch = d.model && d.model.toLowerCase().includes(query);
+      const associationMatch = d.associationName && d.associationName.toLowerCase().includes(query);
+      const zoneMatch = d.zoneName && d.zoneName.toLowerCase().includes(query);
+      const farmMatch = d.farmName && d.farmName.toLowerCase().includes(query);
+      return idMatch || modelMatch || associationMatch || zoneMatch || farmMatch;
+    });
+  }
+
+  return list;
+});
+
+const toggleFilters = () => {
+  showFilters.value = !showFilters.value;
+};
+
+const clearFilters = () => {
+  searchQuery.value = '';
+  statusFilter.value = 'ALL';
+  associationFilter.value = 'ALL';
+};
 
 // Abrir el modal y autocompletar un texto por defecto según la acción
 const openModal = (id, status) => {
@@ -183,7 +276,64 @@ const formatDate = (dateString) => {
 .header-content h2 { font-size: 2.5rem; font-weight: 900; margin: 0; color: #fff; letter-spacing: -1px;}
 .line-decorator { flex: 1; height: 3px; background: linear-gradient(90deg, #10b981, transparent); opacity: 0.8; border-radius: 4px; }
 .line-decorator.reverse { background: linear-gradient(270deg, #10b981, transparent); }
-.tabs-container { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #1f2937; padding-bottom: 25px;}
+.tabs-container { display: flex; align-items: center; gap: 12px; border-bottom: 2px solid #1f2937; padding-bottom: 25px; position: relative;}
+.icon-right {
+  position: absolute;
+  right: 5px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.3s;
+  padding: 8px;
+  border-radius: 50%;
+  background: #11131a;
+  border: 1px solid #2d3748;
+}
+.icon-right:hover { color: #20c997; background: #1a4d4e; border-color: #10b981;}
+.icon-active { color: #10b981; transform: scale(1.1); background: #1a4d4e; border-color: #10b981;}
+
+.filters-panel {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  padding: 1.8rem;
+  background-color: #11131a;
+  border-radius: 0 0 16px 16px;
+  border: 2px solid #1f2937;
+  border-top: none;
+  margin-top: -1px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  flex-wrap: wrap;
+}
+.filter-group { display: flex; flex-direction: column; gap: 8px; }
+.filter-group label { font-size: 0.8rem; color: #20c997; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;}
+.filter-input, .filter-select {
+  background-color: #1f2937;
+  border: 1px solid #374151;
+  color: white;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  min-width: 200px;
+}
+.filter-input:focus, .filter-select:focus { outline: none; border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
+.btn-clear {
+  background: transparent;
+  color: #ef4444;
+  border: 2px solid #ef4444;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  height: 42px;
+  transition: all 0.2s;
+}
+.btn-clear:hover { background: rgba(239, 68, 68, 0.1); }
+.slide-fade-enter-active { transition: all 0.3s ease-out; }
+.slide-fade-leave-active { transition: all 0.2s cubic-bezier(1, 0.5, 0.8, 1); }
+.slide-fade-enter-from, .slide-fade-leave-to { transform: translateY(-15px); opacity: 0; }
+
 .tabs-container button { background: #11131a; border: 1px solid #374151; color: #a0aec0; padding: 10px 28px; border-radius: 30px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.2s ease; }
 .tabs-container button:hover { background: #1f2937; color: #fff; border-color: #4b5563; }
 .tabs-container button.active { background-color: #1a4d4e; border-color: #10b981; color: #20c997; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.2); }
@@ -204,6 +354,8 @@ const formatDate = (dateString) => {
 .info-row label { font-size: 0.8rem; font-weight: 800; color: #6b7280; text-transform: uppercase;}
 .premium-device-card p { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem;}
 .model-text { color: #e2e8f0; font-weight: 600; }
+.association-text { color: #fbbf24; font-weight: 700; }
+.zone-text { color: #3182ce; font-weight: 700; background: rgba(49, 130, 206, 0.1); padding: 2px 6px; border-radius: 4px; }
 .last-maintenance { flex-direction: column; align-items: flex-start; gap: 6px; background: #0c0e14; padding: 12px; border-radius: 8px; border: 1px solid #1f2937; margin-top: 5px;}
 .last-maintenance p { color: #a0aec0; font-size: 0.85rem; }
 
