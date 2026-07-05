@@ -48,12 +48,24 @@
         </div>
 
         <div class="stat-row">
-          <label class="stat-label">Optimal Humidity</label>
+          <label class="stat-label">Optimal Air Humidity</label>
           <div class="slider-wrapper">
             <span class="pct">0%</span>
             <div class="range-container">
-              <input type="range" min="0" max="100" v-model="crop.optimalHumidity" class="gtx-slider" />
-              <span class="thumb-value" :style="{ left: crop.optimalHumidity + '%' }">{{ crop.optimalHumidity }}%</span>
+              <input type="range" min="0" max="100" v-model.number="crop.optimalHumidityAir" class="gtx-slider" />
+              <span class="thumb-value" :style="{ left: crop.optimalHumidityAir + '%' }">{{ crop.optimalHumidityAir }}%</span>
+            </div>
+            <span class="pct">100%</span>
+          </div>
+        </div>
+
+        <div class="stat-row">
+          <label class="stat-label">Optimal Soil Moisture</label>
+          <div class="slider-wrapper">
+            <span class="pct">0%</span>
+            <div class="range-container">
+              <input type="range" min="0" max="100" v-model.number="crop.optimalHumiditySoil" class="gtx-slider" />
+              <span class="thumb-value" :style="{ left: crop.optimalHumiditySoil + '%' }">{{ crop.optimalHumiditySoil }}%</span>
             </div>
             <span class="pct">100%</span>
           </div>

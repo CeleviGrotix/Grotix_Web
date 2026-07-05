@@ -19,7 +19,8 @@ export const CatalogApi = {
       commonName: cropData.commonName,
       scientificName: cropData.scientificName,
       optimalTemperature: cropData.optimalTemperature || 0,
-      optimalHumidity: cropData.optimalHumidity || 0,
+      optimalHumidityAir: cropData.optimalHumidityAir || 0,   // <-- NUEVO
+      optimalHumiditySoil: cropData.optimalHumiditySoil || 0, // <-- NUEVO
       optimalLight: cropData.optimalLight || 0,
       maxStressTime: cropData.maxStressTime || 0,
       imageUrl: cropData.imageUrl || ''
@@ -32,16 +33,16 @@ export const CatalogApi = {
     const payload = {
       commonName: cropData.commonName,
       scientificName: cropData.scientificName,
-      optimalTemperature: cropData.optimalTemperature,
-      optimalHumidity: cropData.optimalHumidity,
-      optimalLight: cropData.optimalLight,
-      maxStressTime: cropData.maxStressTime,
+      optimalTemperature: Number(cropData.optimalTemperature), // Number() por seguridad (C# es estricto)
+      optimalHumidityAir: Number(cropData.optimalHumidityAir),   // <-- NUEVO
+      optimalHumiditySoil: Number(cropData.optimalHumiditySoil), // <-- NUEVO
+      optimalLight: Number(cropData.optimalLight),
+      maxStressTime: Number(cropData.maxStressTime),
       imageUrl: cropData.imageUrl
     };
     const response = await axiosClient.put(`/api/v1/catalog/crops/${id}`, payload);
     return response.data;
   },
-
   async deleteCrop(id) {
     await axiosClient.delete(`/api/v1/catalog/crops/${id}`);
   }
